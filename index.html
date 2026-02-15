@@ -237,6 +237,7 @@
     let currentDie = 'd20';
     let currentMod = 0;
     let isRolling = false;
+    let showingResult = false;
     let rollHistory = [];
 
     // ─── Three.js setup ───
@@ -330,9 +331,9 @@
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, size, size);
 
-        // Number
+        // Number — always centered at (0.5, 0.5) which maps to face centroid via UV
         const text = String(num);
-        const fontSize = text.length > 1 ? size * 0.38 : size * 0.48;
+        const fontSize = text.length > 1 ? size * 0.32 : size * 0.42;
         ctx.font = `bold ${fontSize}px "Segoe UI", Arial, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -342,12 +343,7 @@
         ctx.shadowBlur = size * 0.08;
         ctx.fillStyle = NUM_COLOR;
 
-        // Vertical offset (push numbers toward center for triangular faces)
-        let yOff = 0;
-        if (shape === 'tri-up') yOff = size * 0.08;
-        else if (shape === 'tri-down') yOff = -size * 0.08;
-
-        ctx.fillText(text, size / 2, size / 2 + yOff);
+        ctx.fillText(text, size / 2, size / 2);
 
         // Underline 6 and 9
         if (num === 6 || num === 9) {
@@ -365,7 +361,7 @@
             map: makeNumberTexture(num, shape),
             metalness: 0.15,
             roughness: 0.55,
-            side: THREE.FrontSide,
+            side: THREE.DoubleSide,
         });
     }
 
@@ -415,30 +411,26 @@
             const bitangent = new THREE.Vector3().crossVectors(normal, tangent).normalize();
 
             // Project all vertices to 2D face-local coords
+            // Origin (0,0) = face centroid (from 'center' above)
             const proj = verts.map(v => {
                 const d = new THREE.Vector3().subVectors(v, center);
                 return { u: d.dot(tangent), v: d.dot(bitangent) };
             });
 
-            // Find bounding box
-            let minU = Infinity, maxU = -Infinity, minV = Infinity, maxV = -Infinity;
+            // Find max extent from origin (= centroid) in any direction
+            let maxExt = 0;
             for (const p of proj) {
-                minU = Math.min(minU, p.u); maxU = Math.max(maxU, p.u);
-                minV = Math.min(minV, p.v); maxV = Math.max(maxV, p.v);
+                maxExt = Math.max(maxExt, Math.abs(p.u), Math.abs(p.v));
             }
-            const rangeU = maxU - minU || 1;
-            const rangeV = maxV - minV || 1;
-            const range = Math.max(rangeU, rangeV);
+            maxExt = maxExt || 1;
 
-            // Map to [0.05, 0.95] with uniform scale, centered
-            const padding = 0.05;
-            const scale = (1 - 2 * padding) / range;
-            const centerU = (minU + maxU) / 2;
-            const centerV = (minV + maxV) / 2;
+            // Scale so the centroid maps to UV (0.5, 0.5) and face fits [0.08, 0.92]
+            const halfRange = 0.42;
+            const scale = halfRange / maxExt;
 
             for (let j = 0; j < vertsPerFace; j++) {
-                uvs[(base + j) * 2]     = 0.5 + (proj[j].u - centerU) * scale;
-                uvs[(base + j) * 2 + 1] = 0.5 + (proj[j].v - centerV) * scale;
+                uvs[(base + j) * 2]     = 0.5 + proj[j].u * scale;
+                uvs[(base + j) * 2 + 1] = 0.5 + proj[j].v * scale;
             }
         }
 
@@ -672,6 +664,8 @@
 
         if (rollAnim) {
             updateRollAnimation(time);
+        } else if (showingResult) {
+            // After roll: die stays completely still at result orientation
         } else if (dieMesh) {
             // Idle: gentle float and rotate
             idleTime += 0.012;
@@ -795,6 +789,7 @@
     function onDieTap() {
         if (isRolling) return;
         isRolling = true;
+        showingResult = false;
 
         document.getElementById('tapHint').style.display = 'none';
         document.getElementById('btnAction').disabled = true;
@@ -866,6 +861,8 @@
         const panel = document.getElementById('resultPanel');
         const btnAction = document.getElementById('btnAction');
         const btnReroll = document.getElementById('btnReroll');
+
+        showingResult = true;
 
         const isCrit = currentDie === 'd20' && rawRolls[0] === 20;
         const isFail = currentDie === 'd20' && rawRolls[0] === 1;
@@ -981,6 +978,7 @@
 
     function resetRoll() {
         isRolling = false;
+        showingResult = false;
         rollAnim = null;
         createDieMesh(currentDie);
         idleTime = 0;
