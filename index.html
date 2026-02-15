@@ -348,7 +348,7 @@
         // Underline 6 and 9
         if (num === 6 || num === 9) {
             const w = ctx.measureText(text).width;
-            ctx.fillRect(size/2 - w/2, size/2 + yOff + fontSize*0.38, w, fontSize * 0.06);
+            ctx.fillRect(size/2 - w/2, size/2 + fontSize*0.38, w, fontSize * 0.06);
         }
 
         const tex = new THREE.CanvasTexture(c);
