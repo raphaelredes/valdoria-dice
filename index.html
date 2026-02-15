@@ -17,9 +17,7 @@
             --text-dim: #8899aa;
             --glow: rgba(212, 175, 55, 0.4);
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             background: var(--bg);
@@ -33,32 +31,17 @@
             -webkit-user-select: none;
         }
 
-        /* --- HEADER --- */
         .header {
             width: 100%;
             padding: 12px 16px;
             text-align: center;
             background: linear-gradient(180deg, var(--bg2), transparent);
         }
-        .header h1 {
-            font-size: 16px;
-            color: var(--gold);
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-        .header .label {
-            font-size: 13px;
-            color: var(--text-dim);
-            margin-top: 4px;
-        }
-        .header .formula-display {
-            font-size: 14px;
-            color: var(--gold-light);
-            font-family: 'Courier New', monospace;
-            margin-top: 4px;
-        }
+        .header h1 { font-size: 16px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; }
+        .header .label { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+        .header .formula-display { font-size: 14px; color: var(--gold-light); font-family: 'Courier New', monospace; margin-top: 4px; }
 
-        /* --- DICE ARENA --- */
+        /* ─── ARENA ─── */
         .arena {
             flex: 1;
             display: flex;
@@ -69,227 +52,13 @@
             position: relative;
             padding: 20px;
         }
-
-        /* Particle / effect container */
         .particles {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             pointer-events: none;
             overflow: hidden;
         }
-        .particle {
-            position: absolute;
-            border-radius: 50%;
-            opacity: 0;
-        }
-
-        /* Die wrapper — vertical position (throw arc + bounces) */
-        .die-wrapper {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* Die container — holds die + label, handles scale/rotate/translate */
-        .die-container {
-            position: relative;
-            width: 160px;
-            height: 160px;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .die {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Ground shadow */
-        .die-shadow {
-            width: 120px;
-            height: 20px;
-            border-radius: 50%;
-            background: radial-gradient(ellipse, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.15) 50%, transparent 72%);
-            margin-top: 6px;
-            filter: blur(3px);
-        }
-
-        /* Die shapes */
-        .die-face {
-            width: 140px;
-            height: 140px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .die-face.d20 {
-            clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
-            background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
-        }
-        .die-face.d20::before {
-            content: '';
-            position: absolute;
-            inset: 2px;
-            clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
-            background: linear-gradient(135deg, #3a3a5a, #2a2a4a);
-        }
-
-        .die-face.d12 {
-            clip-path: polygon(50% 0%, 95% 35%, 80% 90%, 20% 90%, 5% 35%);
-            background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
-        }
-        .die-face.d12::before {
-            content: '';
-            position: absolute;
-            inset: 2px;
-            clip-path: polygon(50% 0%, 95% 35%, 80% 90%, 20% 90%, 5% 35%);
-            background: linear-gradient(135deg, #3a3a5a, #2a2a4a);
-        }
-
-        .die-face.d10 {
-            clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 20% 100%, 0% 40%);
-            background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
-        }
-        .die-face.d10::before {
-            content: '';
-            position: absolute;
-            inset: 2px;
-            clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 20% 100%, 0% 40%);
-            background: linear-gradient(135deg, #3a3a5a, #2a2a4a);
-        }
-
-        .die-face.d8 {
-            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-            background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
-        }
-        .die-face.d8::before {
-            content: '';
-            position: absolute;
-            inset: 2px;
-            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-            background: linear-gradient(135deg, #3a3a5a, #2a2a4a);
-        }
-
-        .die-face.d6 {
-            border-radius: 16px;
-            background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
-            border: 2px solid #3a3a5a;
-        }
-
-        .die-face.d4 {
-            clip-path: polygon(50% 5%, 97% 95%, 3% 95%);
-            background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
-        }
-        .die-face.d4::before {
-            content: '';
-            position: absolute;
-            inset: 3px;
-            clip-path: polygon(50% 5%, 97% 95%, 3% 95%);
-            background: linear-gradient(135deg, #3a3a5a, #2a2a4a);
-        }
-
-        /* Number display */
-        .die-number {
-            position: relative;
-            z-index: 2;
-            font-size: 48px;
-            font-weight: 900;
-            color: var(--gold);
-            text-shadow: 0 0 20px var(--glow), 0 2px 4px rgba(0,0,0,0.5);
-            font-variant-numeric: tabular-nums;
-            transition: opacity 0.06s;
-        }
-
-        .die-type-label {
-            position: absolute;
-            bottom: 4px;
-            right: 4px;
-            font-size: 12px;
-            color: var(--text-dim);
-            font-weight: 700;
-            opacity: 0.6;
-            z-index: 3;
-            pointer-events: none;
-        }
-
-        /* --- STATES --- */
-
-        /* Idle — gentle float */
-        .state-idle .die-container {
-            animation: idle-float 3s ease-in-out infinite;
-        }
-        .state-idle .die-shadow {
-            animation: idle-shadow 3s ease-in-out infinite;
-        }
-        .tap-hint {
-            margin-top: 16px;
-            font-size: 15px;
-            color: var(--text-dim);
-            animation: fade-pulse 2s ease-in-out infinite;
-        }
-        @keyframes idle-float {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-6px) scale(1.02); }
-        }
-        @keyframes idle-shadow {
-            0%, 100% { transform: scaleX(1); opacity: 0.6; }
-            50% { transform: scaleX(0.88); opacity: 0.35; }
-        }
-        @keyframes fade-pulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
-        }
-
-        /* Result glow */
-        .state-result .die-number {
-            animation: result-glow 1.5s ease-in-out infinite;
-        }
-        .state-result .die-face {
-            box-shadow: 0 0 40px var(--glow), 0 0 80px rgba(212, 175, 55, 0.15);
-        }
-        @keyframes result-glow {
-            0%, 100% { text-shadow: 0 0 20px var(--glow), 0 2px 4px rgba(0,0,0,0.5); }
-            50% { text-shadow: 0 0 40px var(--gold), 0 0 60px var(--glow), 0 2px 4px rgba(0,0,0,0.5); }
-        }
-
-        /* Critical */
-        .state-result.critical .die-number {
-            color: var(--green);
-            font-size: 56px;
-            text-shadow: 0 0 30px rgba(46, 204, 113, 0.6), 0 0 60px rgba(46, 204, 113, 0.3);
-        }
-        .state-result.critical .die-face {
-            box-shadow: 0 0 40px rgba(46, 204, 113, 0.4), 0 0 80px rgba(46, 204, 113, 0.15);
-        }
-        .state-result.crit-fail .die-number {
-            color: var(--red);
-            font-size: 56px;
-            text-shadow: 0 0 30px rgba(231, 76, 60, 0.6), 0 0 60px rgba(231, 76, 60, 0.3);
-        }
-        .state-result.crit-fail .die-face {
-            box-shadow: 0 0 40px rgba(231, 76, 60, 0.4), 0 0 80px rgba(231, 76, 60, 0.15);
-        }
-
-        /* Screen shake on crits */
-        @keyframes screen-shake {
-            0%, 100% { transform: translate(0, 0); }
-            10% { transform: translate(-5px, 3px); }
-            20% { transform: translate(4px, -3px); }
-            30% { transform: translate(-3px, 4px); }
-            40% { transform: translate(3px, -2px); }
-            50% { transform: translate(-2px, 2px); }
-            60% { transform: translate(1px, -1px); }
-        }
-        body.screen-shake { animation: screen-shake 0.45s ease-out; }
-
-        /* Impact ring */
+        .particle { position: absolute; border-radius: 50%; opacity: 0; }
         .impact-ring {
             position: absolute;
             border-radius: 50%;
@@ -298,156 +67,184 @@
             opacity: 0;
         }
 
-        /* --- RESULT PANEL --- */
-        .result-panel {
-            width: 100%;
-            padding: 16px;
-            text-align: center;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.4s ease, transform 0.4s ease;
+        /* ─── 3D CUBE ─── */
+        .die-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        .result-panel.visible {
-            opacity: 1;
-            transform: translateY(0);
+        .cube-viewport {
+            width: 150px;
+            height: 150px;
+            perspective: 500px;
+            perspective-origin: 50% 45%;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
         }
-        .result-total {
-            font-size: 28px;
+        .cube {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            transform-style: preserve-3d;
+            margin: 15px auto;
+        }
+        /* Idle: gentle rocking */
+        .state-idle .cube {
+            animation: cube-idle 4s ease-in-out infinite;
+        }
+        @keyframes cube-idle {
+            0%, 100% { transform: rotateX(-18deg) rotateY(25deg); }
+            25% { transform: rotateX(-15deg) rotateY(32deg); }
+            50% { transform: rotateX(-22deg) rotateY(20deg); }
+            75% { transform: rotateX(-16deg) rotateY(28deg); }
+        }
+
+        .face {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            backface-visibility: hidden;
+            font-size: 46px;
             font-weight: 900;
             color: var(--gold);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.6), 0 0 15px var(--glow);
+            font-variant-numeric: tabular-nums;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
         }
-        .result-breakdown {
-            font-size: 13px;
-            color: var(--text-dim);
+        /* Each face has slightly different gradient to simulate directional lighting */
+        .face-front  { transform: translateZ(60px);                     background: linear-gradient(160deg, #333360, #252548); border: 1px solid rgba(212,175,55,0.18); }
+        .face-back   { transform: rotateY(180deg) translateZ(60px);     background: linear-gradient(160deg, #2a2a50, #202040); border: 1px solid rgba(212,175,55,0.10); }
+        .face-right  { transform: rotateY(90deg) translateZ(60px);      background: linear-gradient(160deg, #2e2e55, #232345); border: 1px solid rgba(212,175,55,0.12); }
+        .face-left   { transform: rotateY(-90deg) translateZ(60px);     background: linear-gradient(160deg, #303058, #262648); border: 1px solid rgba(212,175,55,0.14); }
+        .face-top    { transform: rotateX(90deg) translateZ(60px);      background: linear-gradient(160deg, #383868, #2c2c58); border: 1px solid rgba(212,175,55,0.20); }
+        .face-bottom { transform: rotateX(-90deg) translateZ(60px);     background: linear-gradient(160deg, #222242, #1a1a34); border: 1px solid rgba(212,175,55,0.06); }
+
+        /* Die badge — shows die type below shadow */
+        .die-badge {
             margin-top: 4px;
-            font-family: 'Courier New', monospace;
-        }
-        .result-label {
-            font-size: 16px;
+            font-size: 13px;
             font-weight: 700;
-            margin-top: 8px;
-            text-transform: uppercase;
+            color: var(--text-dim);
             letter-spacing: 1px;
         }
+
+        /* Ground shadow */
+        .die-shadow {
+            width: 110px;
+            height: 18px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.15) 50%, transparent 72%);
+            margin-top: 4px;
+            filter: blur(3px);
+        }
+        .state-idle .die-shadow {
+            animation: idle-shadow 4s ease-in-out infinite;
+        }
+        @keyframes idle-shadow {
+            0%, 100% { transform: scaleX(1); opacity: 0.6; }
+            50% { transform: scaleX(0.9); opacity: 0.4; }
+        }
+
+        .tap-hint {
+            margin-top: 14px;
+            font-size: 15px;
+            color: var(--text-dim);
+            animation: fade-pulse 2s ease-in-out infinite;
+        }
+        @keyframes fade-pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Result state */
+        .state-result .face { box-shadow: inset 0 0 20px rgba(0,0,0,0.3), 0 0 30px var(--glow); }
+        .state-result .cube .face span { animation: result-glow 1.5s ease-in-out infinite; }
+        @keyframes result-glow {
+            0%, 100% { text-shadow: 0 1px 3px rgba(0,0,0,0.6), 0 0 15px var(--glow); }
+            50% { text-shadow: 0 1px 3px rgba(0,0,0,0.6), 0 0 30px var(--gold), 0 0 50px var(--glow); }
+        }
+        .state-result.critical .face { box-shadow: inset 0 0 20px rgba(0,0,0,0.3), 0 0 40px rgba(46,204,113,0.4); }
+        .state-result.critical .cube .face span { color: var(--green); }
+        .state-result.crit-fail .face { box-shadow: inset 0 0 20px rgba(0,0,0,0.3), 0 0 40px rgba(231,76,60,0.4); }
+        .state-result.crit-fail .cube .face span { color: var(--red); }
+
+        /* Screen shake */
+        @keyframes screen-shake {
+            0%, 100% { transform: translate(0,0); }
+            10% { transform: translate(-5px, 3px); }
+            20% { transform: translate(4px, -3px); }
+            30% { transform: translate(-3px, 4px); }
+            40% { transform: translate(3px, -2px); }
+            50% { transform: translate(-2px, 2px); }
+        }
+        body.screen-shake { animation: screen-shake 0.4s ease-out; }
+
+        /* ─── RESULT PANEL ─── */
+        .result-panel {
+            width: 100%; padding: 16px; text-align: center;
+            opacity: 0; transform: translateY(20px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        .result-panel.visible { opacity: 1; transform: translateY(0); }
+        .result-total { font-size: 28px; font-weight: 900; color: var(--gold); }
+        .result-breakdown { font-size: 13px; color: var(--text-dim); margin-top: 4px; font-family: 'Courier New', monospace; }
+        .result-label { font-size: 16px; font-weight: 700; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; }
         .result-label.success { color: var(--green); }
         .result-label.failure { color: var(--red); }
         .result-label.critical { color: var(--green); font-size: 20px; }
         .result-label.crit-fail { color: var(--red); font-size: 20px; }
 
-        /* --- BOTTOM BAR --- */
-        .bottom-bar {
-            width: 100%;
-            padding: 12px 16px 24px;
-            display: flex;
-            gap: 8px;
-        }
+        /* ─── BOTTOM BAR ─── */
+        .bottom-bar { width: 100%; padding: 12px 16px 24px; display: flex; gap: 8px; }
         .btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
+            flex: 1; padding: 12px; border: none; border-radius: 10px;
+            font-size: 15px; font-weight: 700; cursor: pointer;
             transition: transform 0.15s ease, opacity 0.15s ease;
             -webkit-tap-highlight-color: transparent;
         }
         .btn:active { transform: scale(0.96); }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--gold), #c4a032);
-            color: #1a1a2e;
-        }
-        .btn-secondary {
-            background: rgba(255,255,255,0.08);
-            color: var(--text);
-            border: 1px solid rgba(255,255,255,0.15);
-        }
+        .btn-primary { background: linear-gradient(135deg, var(--gold), #c4a032); color: #1a1a2e; }
+        .btn-secondary { background: rgba(255,255,255,0.08); color: var(--text); border: 1px solid rgba(255,255,255,0.15); }
         .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        /* --- DICE SELECTOR --- */
-        .dice-selector {
-            display: flex;
-            gap: 8px;
-            padding: 8px 16px;
-            overflow-x: auto;
-            width: 100%;
-            justify-content: center;
-        }
+        /* ─── DICE SELECTOR ─── */
+        .dice-selector { display: flex; gap: 8px; padding: 8px 16px; overflow-x: auto; width: 100%; justify-content: center; }
         .dice-chip {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 700;
-            background: rgba(255,255,255,0.06);
-            color: var(--text-dim);
-            border: 1px solid rgba(255,255,255,0.1);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            white-space: nowrap;
+            padding: 6px 14px; border-radius: 20px; font-size: 14px; font-weight: 700;
+            background: rgba(255,255,255,0.06); color: var(--text-dim);
+            border: 1px solid rgba(255,255,255,0.1); cursor: pointer;
+            transition: all 0.2s ease; white-space: nowrap;
             -webkit-tap-highlight-color: transparent;
         }
-        .dice-chip.active {
-            background: rgba(212, 175, 55, 0.15);
-            color: var(--gold);
-            border-color: var(--gold);
-        }
+        .dice-chip.active { background: rgba(212,175,55,0.15); color: var(--gold); border-color: var(--gold); }
         .dice-chip:active { transform: scale(0.95); }
 
-        /* --- MODIFIER INPUT --- */
-        .mod-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 8px;
-        }
+        /* ─── MODIFIER ─── */
+        .mod-row { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
         .mod-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.15);
-            background: rgba(255,255,255,0.06);
-            color: var(--text);
-            font-size: 20px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 36px; height: 36px; border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06);
+            color: var(--text); font-size: 20px; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
             -webkit-tap-highlight-color: transparent;
         }
         .mod-btn:active { background: rgba(255,255,255,0.12); }
-        .mod-value {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--gold);
-            min-width: 40px;
-            text-align: center;
-            font-family: 'Courier New', monospace;
-        }
+        .mod-value { font-size: 18px; font-weight: 700; color: var(--gold); min-width: 40px; text-align: center; font-family: 'Courier New', monospace; }
 
-        /* --- HISTORY --- */
-        .history {
-            width: 100%;
-            padding: 0 16px;
-            max-height: 100px;
-            overflow-y: auto;
-        }
-        .history-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-            font-size: 12px;
-            color: var(--text-dim);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
+        /* ─── HISTORY ─── */
+        .history { width: 100%; padding: 0 16px; max-height: 100px; overflow-y: auto; }
+        .history-item { display: flex; justify-content: space-between; padding: 4px 0; font-size: 12px; color: var(--text-dim); border-bottom: 1px solid rgba(255,255,255,0.05); }
         .history-item .h-result { color: var(--gold); font-weight: 700; }
         .history-item .h-crit { color: var(--green); }
         .history-item .h-fail { color: var(--red); }
 
         /* Hidden in game mode */
-        .game-mode .dice-selector,
-        .game-mode .mod-row,
-        .game-mode .history { display: none; }
+        .game-mode .dice-selector, .game-mode .mod-row, .game-mode .history { display: none; }
         .game-mode .btn-secondary { display: none; }
     </style>
 </head>
@@ -459,12 +256,12 @@
     </div>
 
     <div class="dice-selector" id="diceSelector">
-        <div class="dice-chip active" data-die="d4">d4</div>
+        <div class="dice-chip" data-die="d4">d4</div>
         <div class="dice-chip" data-die="d6">d6</div>
         <div class="dice-chip" data-die="d8">d8</div>
         <div class="dice-chip" data-die="d10">d10</div>
         <div class="dice-chip" data-die="d12">d12</div>
-        <div class="dice-chip" data-die="d20">d20</div>
+        <div class="dice-chip active" data-die="d20">d20</div>
     </div>
 
     <div class="mod-row" id="modRow">
@@ -478,15 +275,18 @@
         <div class="particles" id="particles"></div>
 
         <div class="die-wrapper" id="dieWrapper">
-            <div class="die-container" id="dieContainer" onclick="onDieTap()">
-                <div class="die">
-                    <div class="die-face d20" id="dieFace">
-                        <span class="die-number" id="dieNumber">20</span>
-                    </div>
-                    <span class="die-type-label" id="dieTypeLabel">d20</span>
+            <div class="cube-viewport" id="cubeViewport" onclick="onDieTap()">
+                <div class="cube" id="cube">
+                    <div class="face face-front"  id="f0"><span>20</span></div>
+                    <div class="face face-back"   id="f1"><span>1</span></div>
+                    <div class="face face-right"  id="f2"><span>14</span></div>
+                    <div class="face face-left"   id="f3"><span>7</span></div>
+                    <div class="face face-top"    id="f4"><span>11</span></div>
+                    <div class="face face-bottom" id="f5"><span>4</span></div>
                 </div>
             </div>
             <div class="die-shadow" id="dieShadow"></div>
+            <div class="die-badge" id="dieBadge">d20</div>
         </div>
 
         <div class="tap-hint" id="tapHint">Toque para rolar</div>
@@ -506,16 +306,9 @@
     </div>
 
     <script>
-    // ─── Telegram WebApp ───
     const tg = window.Telegram && window.Telegram.WebApp;
-    if (tg) {
-        tg.ready();
-        tg.expand();
-        const bgColor = tg.themeParams.bg_color || '#1a1a2e';
-        document.body.style.background = bgColor;
-    }
+    if (tg) { tg.ready(); tg.expand(); document.body.style.background = tg.themeParams.bg_color || '#1a1a2e'; }
 
-    // ─── URL Parameters ───
     const params = new URLSearchParams(window.location.search);
     const MODE = params.get('mode') || 'free';
     const GAME_FORMULA = params.get('formula');
@@ -526,15 +319,29 @@
     const GAME_DC = params.get('dc') ? parseInt(params.get('dc')) : null;
     const GAME_TOKEN = params.get('token') || '';
 
-    // ─── State ───
     let currentDie = 'd20';
     let currentMod = 0;
     let isRolling = false;
     let rollHistory = [];
-    let activeAnimations = [];
-    let numberTimer = null;
+    let activeAnims = [];
+    let numTimer = null;
 
-    // ─── Init ───
+    // 6 face elements
+    const faceEls = () => [0,1,2,3,4,5].map(i => document.getElementById('f'+i).querySelector('span'));
+
+    // Which rotation (X,Y) shows each face to the camera
+    const FACE_ROT = [
+        { x: 0,    y: 0 },    // 0 front
+        { x: 0,    y: 180 },  // 1 back
+        { x: 0,    y: -90 },  // 2 right
+        { x: 0,    y: 90 },   // 3 left
+        { x: -90,  y: 0 },    // 4 top
+        { x: 90,   y: 0 },    // 5 bottom
+    ];
+
+    // View offset (slight tilt so you see depth)
+    const VIEW_X = -18, VIEW_Y = 22;
+
     function init() {
         if (MODE === 'game') {
             document.body.classList.add('game-mode');
@@ -544,66 +351,67 @@
                 const m = GAME_FORMULA.match(/d(\d+)/);
                 if (m) currentDie = 'd' + m[1];
             }
-            const titles = { 'attack':'Ataque', 'skill':'Teste de Habilidade', 'damage':'Dano', 'save':'Salvaguarda', 'initiative':'Iniciativa', 'death_save':'Salvaguarda contra Morte' };
+            const titles = { attack:'Ataque', skill:'Teste de Habilidade', damage:'Dano', save:'Salvaguarda', initiative:'Iniciativa', death_save:'Salvaguarda contra Morte' };
             if (titles[GAME_TYPE]) document.getElementById('headerTitle').textContent = titles[GAME_TYPE];
         }
-        setDieShape(currentDie);
+
+        updateDieType(currentDie);
         document.querySelectorAll('.dice-chip').forEach(chip => {
             chip.addEventListener('click', () => {
                 if (isRolling) return;
                 document.querySelectorAll('.dice-chip').forEach(c => c.classList.remove('active'));
                 chip.classList.add('active');
                 currentDie = chip.dataset.die;
-                setDieShape(currentDie);
+                updateDieType(currentDie);
                 resetRoll();
             });
         });
-        document.getElementById('dieNumber').textContent = randInt(1, dieMax(currentDie));
+        randomizeFaces();
     }
 
-    function dieMax(d) { return parseInt(d.replace('d', '')); }
-    function randInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+    function dieMax(d) { return parseInt(d.replace('d','')); }
+    function randInt(a,b) { return Math.floor(Math.random()*(b-a+1))+a; }
+    function haptic(s) { if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred(s); }
 
-    function setDieShape(d) {
-        document.getElementById('dieFace').className = 'die-face ' + d;
-        document.getElementById('dieTypeLabel').textContent = d;
+    function updateDieType(d) {
+        document.getElementById('dieBadge').textContent = d;
+        // Activate correct chip
+        document.querySelectorAll('.dice-chip').forEach(c => {
+            c.classList.toggle('active', c.dataset.die === d);
+        });
+    }
+
+    function randomizeFaces() {
+        const max = dieMax(currentDie);
+        faceEls().forEach(sp => { sp.textContent = randInt(1, max); });
     }
 
     function changeMod(delta) {
         if (isRolling) return;
         currentMod = Math.max(-10, Math.min(20, currentMod + delta));
-        document.getElementById('modValue').textContent = currentMod >= 0 ? '+' + currentMod : '' + currentMod;
+        document.getElementById('modValue').textContent = currentMod >= 0 ? '+'+currentMod : ''+currentMod;
     }
 
-    function haptic(style) { if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred(style); }
-
-    // ─── Animation Engine ───
-    // Uses ONLY: translateX, translateY, scale, rotate(Z) — NO rotateX/Y (avoids flat distortion)
-    // 3D illusion from: arc trajectory, scale=depth, fast spin, motion blur, shadow sync, number cycling
+    // ─── Roll ───
 
     function onDieTap() {
         if (isRolling) return;
         isRolling = true;
 
         const arena = document.getElementById('arena');
-        const tapHint = document.getElementById('tapHint');
-        const btnAction = document.getElementById('btnAction');
-
-        tapHint.style.display = 'none';
-        btnAction.disabled = true;
+        document.getElementById('tapHint').style.display = 'none';
+        document.getElementById('btnAction').disabled = true;
         document.getElementById('resultPanel').classList.remove('visible');
         arena.className = 'arena';
 
-        // Determine result
         const max = dieMax(currentDie);
         let finalRaw, finalTotal;
         if (MODE === 'game' && GAME_RESULT !== null) {
             finalTotal = GAME_RESULT;
-            if (GAME_RAW) { finalRaw = GAME_RAW; }
+            if (GAME_RAW) finalRaw = GAME_RAW;
             else {
                 const mm = GAME_FORMULA ? GAME_FORMULA.match(/[+-]\d+$/) : null;
-                const mod = mm ? parseInt(mm[0]) : 0;
-                finalRaw = [Math.max(1, Math.min(max, finalTotal - mod))];
+                finalRaw = [Math.max(1, Math.min(max, finalTotal - (mm ? parseInt(mm[0]) : 0)))];
             }
         } else {
             finalRaw = [randInt(1, max)];
@@ -615,210 +423,213 @@
     }
 
     function animateRoll(finalRaw, finalTotal, max) {
-        const container = document.getElementById('dieContainer');
+        const cube = document.getElementById('cube');
+        const viewport = document.getElementById('cubeViewport');
         const shadow = document.getElementById('dieShadow');
-        const numEl = document.getElementById('dieNumber');
-        const typeLabel = document.getElementById('dieTypeLabel');
+        const faces = faceEls();
 
-        // Cleanup
-        stopAnimations();
+        stopAll();
 
-        // Hide type label during roll (it would spin with the die)
-        typeLabel.style.opacity = '0';
+        // Pick which cube face shows the result (random)
+        const resultFaceIdx = randInt(0, 5);
+        const target = FACE_ROT[resultFaceIdx];
 
-        // Random parameters
-        const spinDir = Math.random() > 0.5 ? 1 : -1;
-        const totalSpin = spinDir * (720 + randInt(180, 540)); // 2-3.5 full spins
-        const driftX = (Math.random() - 0.5) * 50;
+        // Spin direction + count
+        const dirX = Math.random() > 0.5 ? 1 : -1;
+        const dirY = Math.random() > 0.5 ? 1 : -1;
+        const spinsX = 3 + randInt(1, 2); // 4-5 full rotations
+        const spinsY = 4 + randInt(1, 3); // 5-7 full rotations
 
-        // ─── Phase 1: THROW — 550ms ───
-        // Arc up with scale increase (closer to camera), spin fast, blur
+        // Landing rotation: multiple full spins + face target + view tilt
+        const landX = dirX * spinsX * 360 + target.x + VIEW_X;
+        const landY = dirY * spinsY * 360 + target.y + VIEW_Y;
 
-        const throwMs = 550;
+        // Starting rotation (current idle approx)
+        const startX = VIEW_X;
+        const startY = VIEW_Y;
 
-        const throwTraj = container.animate([
-            { transform: 'translateY(0) translateX(0) scale(1) rotate(0deg)', filter: 'blur(0px)', offset: 0 },
-            { transform: `translateY(-70px) translateX(${driftX*0.4}px) scale(1.15) rotate(${totalSpin*0.3}deg)`, filter: 'blur(1.5px)', offset: 0.3 },
-            { transform: `translateY(-85px) translateX(${driftX*0.6}px) scale(1.12) rotate(${totalSpin*0.55}deg)`, filter: 'blur(1px)', offset: 0.5 },
-            { transform: `translateY(-50px) translateX(${driftX*0.85}px) scale(1.06) rotate(${totalSpin*0.8}deg)`, filter: 'blur(0.5px)', offset: 0.75 },
-            { transform: `translateY(0) translateX(${driftX}px) scale(1) rotate(${totalSpin}deg)`, filter: 'blur(0px)', offset: 1 },
+        // Drift
+        const driftX = (Math.random() - 0.5) * 40;
+
+        // Number cycling on all faces
+        numTimer = setInterval(() => {
+            faces.forEach(sp => { sp.textContent = randInt(1, max); });
+        }, 50);
+
+        // ── Phase 1: THROW (600ms) — arc up, rapid 3D spin ──
+        const throwMs = 600;
+
+        // Cube rotation (3D tumble)
+        const cubeThrow = cube.animate([
+            { transform: `rotateX(${startX}deg) rotateY(${startY}deg)` },
+            { transform: `rotateX(${startX + (landX-startX)*0.55}deg) rotateY(${startY + (landY-startY)*0.55}deg)`, offset: 0.5 },
+            { transform: `rotateX(${startX + (landX-startX)*0.82}deg) rotateY(${startY + (landY-startY)*0.82}deg)`, offset: 0.82 },
+            { transform: `rotateX(${landX}deg) rotateY(${landY}deg)` },
         ], { duration: throwMs, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', fill: 'forwards' });
-        activeAnimations.push(throwTraj);
+        activeAnims.push(cubeThrow);
 
-        const throwShadow = shadow.animate([
-            { transform: 'scaleX(1) scaleY(1)', opacity: 0.6, offset: 0 },
-            { transform: 'scaleX(0.4) scaleY(0.5)', opacity: 0.15, offset: 0.35 },
-            { transform: 'scaleX(0.35) scaleY(0.45)', opacity: 0.1, offset: 0.5 },
-            { transform: 'scaleX(0.55) scaleY(0.6)', opacity: 0.25, offset: 0.75 },
-            { transform: 'scaleX(1.2) scaleY(1.1)', opacity: 0.75, offset: 1 },
-        ], { duration: throwMs, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', fill: 'forwards' });
-        activeAnimations.push(throwShadow);
+        // Viewport trajectory: up arc then down
+        const vpThrow = viewport.animate([
+            { transform: `translateY(0) translateX(0)`, offset: 0 },
+            { transform: `translateY(-75px) translateX(${driftX*0.5}px)`, offset: 0.38 },
+            { transform: `translateY(-80px) translateX(${driftX*0.6}px)`, offset: 0.48 },
+            { transform: `translateY(-45px) translateX(${driftX*0.8}px)`, offset: 0.72 },
+            { transform: `translateY(0) translateX(${driftX}px)`, offset: 1 },
+        ], { duration: throwMs, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' });
+        activeAnims.push(vpThrow);
 
-        // Fast number cycling during throw
-        startNumberCycle(numEl, max, 45);
+        // Shadow
+        const shThrow = shadow.animate([
+            { transform: 'scaleX(1)', opacity: 0.6, offset: 0 },
+            { transform: 'scaleX(0.35)', opacity: 0.12, offset: 0.4 },
+            { transform: 'scaleX(0.5)', opacity: 0.2, offset: 0.72 },
+            { transform: 'scaleX(1.15)', opacity: 0.7, offset: 1 },
+        ], { duration: throwMs, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' });
+        activeAnims.push(shThrow);
 
-        // Number flickers (opacity blink) to simulate face-changing
-        const flickerAnim = numEl.animate([
-            { opacity: 1, offset: 0 },
-            { opacity: 0.3, offset: 0.08 },
-            { opacity: 1, offset: 0.12 },
-            { opacity: 0.4, offset: 0.22 },
-            { opacity: 1, offset: 0.26 },
-            { opacity: 0.3, offset: 0.38 },
-            { opacity: 1, offset: 0.42 },
-            { opacity: 0.35, offset: 0.54 },
-            { opacity: 1, offset: 0.58 },
-            { opacity: 0.4, offset: 0.72 },
-            { opacity: 1, offset: 0.76 },
-            { opacity: 1, offset: 1 },
-        ], { duration: throwMs, fill: 'forwards' });
-        activeAnimations.push(flickerAnim);
-
-        // ─── Phase 2: FIRST BOUNCE — at throwMs, 280ms ───
-        const t1 = throwMs;
-        const b1Ms = 280;
+        // ── Phase 2: BOUNCE 1 (280ms) ──
         setTimeout(() => {
             haptic('light');
             spawnDust(driftX);
 
-            startNumberCycle(numEl, max, 80); // slower cycling
+            // Slow number cycling
+            clearInterval(numTimer);
+            numTimer = setInterval(() => {
+                faces.forEach(sp => { sp.textContent = randInt(1, max); });
+            }, 100);
 
-            const b1Spin = totalSpin + spinDir * randInt(90, 180);
-            const bounce1 = container.animate([
-                { transform: `translateY(0) translateX(${driftX}px) scale(1) rotate(${totalSpin}deg)`, offset: 0 },
-                { transform: `translateY(0) translateX(${driftX}px) scale(0.94, 1.06) rotate(${totalSpin}deg)`, offset: 0.06 }, // squash on impact
-                { transform: `translateY(-28px) translateX(${driftX+4}px) scale(1.05) rotate(${b1Spin*0.6}deg)`, offset: 0.4 },
-                { transform: `translateY(0) translateX(${driftX+7}px) scale(1) rotate(${b1Spin}deg)`, offset: 1 },
-            ], { duration: b1Ms, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' });
-            activeAnimations.push(bounce1);
+            // Small wobble rotation
+            const wobbleX = landX + dirX * randInt(15, 35);
+            const wobbleY = landY + dirY * randInt(20, 40);
+
+            const cubeB1 = cube.animate([
+                { transform: `rotateX(${landX}deg) rotateY(${landY}deg)` },
+                { transform: `rotateX(${wobbleX}deg) rotateY(${wobbleY}deg)`, offset: 0.5 },
+                { transform: `rotateX(${landX + dirX*8}deg) rotateY(${landY + dirY*10}deg)` },
+            ], { duration: 280, easing: 'ease-out', fill: 'forwards' });
+            activeAnims.push(cubeB1);
+
+            const vpB1 = viewport.animate([
+                { transform: `translateY(0) translateX(${driftX}px)`, offset: 0 },
+                { transform: `translateY(0) translateX(${driftX}px) scaleY(0.95)`, offset: 0.05 }, // squash
+                { transform: `translateY(-25px) translateX(${driftX+4}px) scaleY(1)`, offset: 0.45 },
+                { transform: `translateY(0) translateX(${driftX+6}px)`, offset: 1 },
+            ], { duration: 280, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' });
+            activeAnims.push(vpB1);
 
             const shB1 = shadow.animate([
-                { transform: 'scaleX(1.2) scaleY(1.1)', opacity: 0.75, offset: 0 },
-                { transform: 'scaleX(1.3) scaleY(1.2)', opacity: 0.85, offset: 0.06 }, // squash = wider shadow
-                { transform: 'scaleX(0.6) scaleY(0.65)', opacity: 0.3, offset: 0.4 },
-                { transform: 'scaleX(1.15) scaleY(1.05)', opacity: 0.7, offset: 1 },
-            ], { duration: b1Ms, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' });
-            activeAnimations.push(shB1);
+                { transform: 'scaleX(1.15)', opacity: 0.7, offset: 0 },
+                { transform: 'scaleX(1.25)', opacity: 0.8, offset: 0.05 },
+                { transform: 'scaleX(0.6)', opacity: 0.3, offset: 0.45 },
+                { transform: 'scaleX(1.1)', opacity: 0.65, offset: 1 },
+            ], { duration: 280, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' });
+            activeAnims.push(shB1);
 
-            // ─── Phase 3: SECOND BOUNCE (smaller) — 220ms ───
-            const x2 = driftX + 7;
+            // ── Phase 3: BOUNCE 2 (200ms) ──
+            const x2 = driftX + 6;
+            const landX2 = landX + dirX*8;
+            const landY2 = landY + dirY*10;
             setTimeout(() => {
                 haptic('light');
-                spawnDust(x2);
 
-                startNumberCycle(numEl, max, 140); // even slower
+                clearInterval(numTimer);
+                numTimer = setInterval(() => {
+                    faces.forEach(sp => { sp.textContent = randInt(1, max); });
+                }, 180);
 
-                const b2Spin = b1Spin + spinDir * randInt(45, 90);
-                const bounce2 = container.animate([
-                    { transform: `translateY(0) translateX(${x2}px) scale(1) rotate(${b1Spin}deg)`, offset: 0 },
-                    { transform: `translateY(0) translateX(${x2}px) scale(0.97, 1.03) rotate(${b1Spin}deg)`, offset: 0.08 },
-                    { transform: `translateY(-10px) translateX(${x2+2}px) scale(1.02) rotate(${b2Spin*0.6}deg)`, offset: 0.4 },
-                    { transform: `translateY(0) translateX(${x2+3}px) scale(1) rotate(${b2Spin}deg)`, offset: 1 },
-                ], { duration: 220, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' });
-                activeAnimations.push(bounce2);
+                const cubeB2 = cube.animate([
+                    { transform: `rotateX(${landX2}deg) rotateY(${landY2}deg)` },
+                    { transform: `rotateX(${landX2 + dirX*5}deg) rotateY(${landY2 + dirY*6}deg)`, offset: 0.5 },
+                    { transform: `rotateX(${landX2 + dirX*2}deg) rotateY(${landY2 + dirY*3}deg)` },
+                ], { duration: 200, easing: 'ease-out', fill: 'forwards' });
+                activeAnims.push(cubeB2);
+
+                const vpB2 = viewport.animate([
+                    { transform: `translateY(0) translateX(${x2}px)`, offset: 0 },
+                    { transform: `translateY(-8px) translateX(${x2+1}px)`, offset: 0.45 },
+                    { transform: `translateY(0) translateX(${x2+2}px)`, offset: 1 },
+                ], { duration: 200, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' });
+                activeAnims.push(vpB2);
 
                 const shB2 = shadow.animate([
-                    { transform: 'scaleX(1.15) scaleY(1.05)', opacity: 0.7, offset: 0 },
-                    { transform: 'scaleX(0.8) scaleY(0.85)', opacity: 0.45, offset: 0.4 },
-                    { transform: 'scaleX(1.05) scaleY(1)', opacity: 0.65, offset: 1 },
-                ], { duration: 220, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' });
-                activeAnimations.push(shB2);
+                    { transform: 'scaleX(1.1)', opacity: 0.65 },
+                    { transform: 'scaleX(0.9)', opacity: 0.5, offset: 0.45 },
+                    { transform: 'scaleX(1.05)', opacity: 0.6 },
+                ], { duration: 200, fill: 'forwards' });
+                activeAnims.push(shB2);
 
-                // ─── Phase 4: SETTLE — 400ms ───
-                const x3 = x2 + 3;
-                const b2SpinFinal = b2Spin;
+                // ── Phase 4: SETTLE (400ms) ──
+                const x3 = x2 + 2;
+                const sX = landX2 + dirX*2;
+                const sY = landY2 + dirY*3;
                 setTimeout(() => {
-                    stopNumberCycle();
+                    clearInterval(numTimer); numTimer = null;
 
-                    // Show 2 intermediate values then the final
-                    const settleValues = [randInt(1, max), finalRaw[0]];
-                    let si = 0;
+                    // Set result face + randomize others
+                    faces[resultFaceIdx].textContent = finalRaw[0];
+                    faces.forEach((sp, i) => {
+                        if (i !== resultFaceIdx) sp.textContent = randInt(1, max);
+                    });
 
-                    function settleTick() {
-                        numEl.textContent = settleValues[si];
-                        si++;
-                        if (si < settleValues.length) {
-                            setTimeout(settleTick, 140);
-                        } else {
-                            // Final wobble + reveal
-                            const wobbleSpin = b2SpinFinal + spinDir * randInt(5, 15);
-                            const settleAnim = container.animate([
-                                { transform: `translateY(0) translateX(${x3}px) rotate(${b2SpinFinal}deg) scale(1)`, offset: 0 },
-                                { transform: `translateY(0) translateX(${x3-1}px) rotate(${b2SpinFinal + spinDir*8}deg) scale(1)`, offset: 0.25 },
-                                { transform: `translateY(0) translateX(${x3+0.5}px) rotate(${wobbleSpin - spinDir*3}deg) scale(1)`, offset: 0.55 },
-                                { transform: `translateY(0) translateX(0) rotate(${wobbleSpin}deg) scale(1)`, offset: 1 },
-                            ], { duration: 350, easing: 'ease-out', fill: 'forwards' });
-                            activeAnimations.push(settleAnim);
+                    // Settle cube to exact landing angle
+                    const finalLandX = target.x + VIEW_X;
+                    const finalLandY = target.y + VIEW_Y;
+                    // Keep within nearest rotation to current
+                    const settleX = sX + shortestAngle(sX, finalLandX);
+                    const settleY = sY + shortestAngle(sY, finalLandY);
 
-                            const shSettle = shadow.animate([
-                                { transform: 'scaleX(1.05) scaleY(1)', opacity: 0.65 },
-                                { transform: 'scaleX(1) scaleY(1)', opacity: 0.6 },
-                            ], { duration: 350, easing: 'ease-out', fill: 'forwards' });
-                            activeAnimations.push(shSettle);
+                    const cubeSettle = cube.animate([
+                        { transform: `rotateX(${sX}deg) rotateY(${sY}deg)` },
+                        { transform: `rotateX(${settleX}deg) rotateY(${settleY}deg)` },
+                    ], { duration: 400, easing: 'cubic-bezier(0.25, 1, 0.5, 1)', fill: 'forwards' });
+                    activeAnims.push(cubeSettle);
 
-                            setTimeout(() => {
-                                typeLabel.style.opacity = '';
-                                finishRoll(finalRaw, finalTotal, max);
-                            }, 300);
-                        }
-                    }
-                    numEl.textContent = settleValues[0];
-                    setTimeout(settleTick, 160);
-                }, 220);
-            }, b1Ms);
-        }, t1);
+                    // Viewport back to center
+                    const vpSettle = viewport.animate([
+                        { transform: `translateY(0) translateX(${x3}px)` },
+                        { transform: `translateY(0) translateX(0)` },
+                    ], { duration: 400, easing: 'ease-out', fill: 'forwards' });
+                    activeAnims.push(vpSettle);
+
+                    const shSettle = shadow.animate([
+                        { transform: 'scaleX(1.05)', opacity: 0.6 },
+                        { transform: 'scaleX(1)', opacity: 0.55 },
+                    ], { duration: 400, easing: 'ease-out', fill: 'forwards' });
+                    activeAnims.push(shSettle);
+
+                    setTimeout(() => finishRoll(finalRaw, finalTotal, max), 380);
+                }, 200);
+            }, 280);
+        }, throwMs);
     }
 
-    // ─── Number Cycling ───
-    function startNumberCycle(el, max, intervalMs) {
-        stopNumberCycle();
-        numberTimer = setInterval(() => { el.textContent = randInt(1, max); }, intervalMs);
-    }
-    function stopNumberCycle() {
-        if (numberTimer) { clearInterval(numberTimer); numberTimer = null; }
+    // Find shortest rotation from current angle to target (within 360)
+    function shortestAngle(from, to) {
+        let diff = ((to - from) % 360 + 540) % 360 - 180;
+        return diff;
     }
 
-    // ─── Result Reveal ───
     function finishRoll(rawRolls, total, max) {
         const arena = document.getElementById('arena');
-        const container = document.getElementById('dieContainer');
-        const numEl = document.getElementById('dieNumber');
         const panel = document.getElementById('resultPanel');
         const btnAction = document.getElementById('btnAction');
         const btnReroll = document.getElementById('btnReroll');
-        const shadow = document.getElementById('dieShadow');
-
-        numEl.textContent = rawRolls[0];
 
         const isCrit = currentDie === 'd20' && rawRolls[0] === 20;
         const isFail = currentDie === 'd20' && rawRolls[0] === 1;
 
-        let stateClass = 'arena state-result';
-        if (isCrit) stateClass += ' critical';
-        if (isFail) stateClass += ' crit-fail';
-        arena.className = stateClass;
-
-        // Pop-in effect: scale up then settle to center
-        const popAnim = container.animate([
-            { transform: 'translateX(0) scale(1) rotate(0deg)' },
-            { transform: 'translateX(0) scale(1.15) rotate(0deg)', offset: 0.35 },
-            { transform: 'translateX(0) scale(1) rotate(0deg)' },
-        ], { duration: 350, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)', fill: 'forwards' });
-        activeAnimations.push(popAnim);
-
-        // Shadow normal
-        const shNorm = shadow.animate([
-            { transform: 'scaleX(1) scaleY(1)', opacity: 0.6 },
-        ], { duration: 200, fill: 'forwards' });
-        activeAnimations.push(shNorm);
+        let cls = 'arena state-result';
+        if (isCrit) cls += ' critical';
+        if (isFail) cls += ' crit-fail';
+        arena.className = cls;
 
         if (isCrit || isFail) {
             haptic('heavy');
             document.body.classList.remove('screen-shake');
-            void document.body.offsetWidth; // reflow to restart
+            void document.body.offsetWidth;
             document.body.classList.add('screen-shake');
-            setTimeout(() => document.body.classList.remove('screen-shake'), 500);
-            spawnImpactRing(isCrit ? '#2ecc71' : '#e74c3c');
+            setTimeout(() => document.body.classList.remove('screen-shake'), 450);
+            spawnRing(isCrit ? '#2ecc71' : '#e74c3c');
             spawnParticles(isCrit ? '#2ecc71' : '#e74c3c', 40);
         } else {
             haptic('heavy');
@@ -827,19 +638,19 @@
 
         document.getElementById('resultTotal').textContent = total;
 
-        const mod = MODE === 'game' ? (GAME_FORMULA ? GAME_FORMULA.replace(/^\d*d\d+/, '') : '') : (currentMod !== 0 ? (currentMod > 0 ? '+' + currentMod : '' + currentMod) : '');
+        const mod = MODE === 'game' ? (GAME_FORMULA ? GAME_FORMULA.replace(/^\d*d\d+/, '') : '') : (currentMod !== 0 ? (currentMod > 0 ? '+'+currentMod : ''+currentMod) : '');
         const rollStr = rawRolls.join(' + ');
         document.getElementById('resultBreakdown').textContent =
             rawRolls.length > 1 ? `[${rollStr}]${mod} = ${total}` :
             mod ? `${rawRolls[0]}${mod} = ${total}` : '';
 
-        const labelEl = document.getElementById('resultLabel');
-        if (isCrit) { labelEl.textContent = 'ACERTO CRITICO!'; labelEl.className = 'result-label critical'; }
-        else if (isFail) { labelEl.textContent = 'FALHA CRITICA!'; labelEl.className = 'result-label crit-fail'; }
+        const lbl = document.getElementById('resultLabel');
+        if (isCrit) { lbl.textContent = 'ACERTO CRITICO!'; lbl.className = 'result-label critical'; }
+        else if (isFail) { lbl.textContent = 'FALHA CRITICA!'; lbl.className = 'result-label crit-fail'; }
         else if (MODE === 'game' && GAME_DC !== null) {
-            if (total >= GAME_DC) { labelEl.textContent = 'SUCESSO!'; labelEl.className = 'result-label success'; }
-            else { labelEl.textContent = 'FALHA'; labelEl.className = 'result-label failure'; }
-        } else { labelEl.textContent = ''; labelEl.className = 'result-label'; }
+            if (total >= GAME_DC) { lbl.textContent = 'SUCESSO!'; lbl.className = 'result-label success'; }
+            else { lbl.textContent = 'FALHA'; lbl.className = 'result-label failure'; }
+        } else { lbl.textContent = ''; lbl.className = 'result-label'; }
 
         panel.classList.add('visible');
 
@@ -861,123 +672,97 @@
 
     // ─── Effects ───
 
-    function spawnDust(offsetX) {
+    function spawnDust(offX) {
         const c = document.getElementById('particles');
-        const cx = c.offsetWidth / 2 + (offsetX || 0);
-        const cy = c.offsetHeight / 2 + 85;
-        for (let i = 0; i < 6; i++) {
+        const cx = c.offsetWidth/2 + (offX||0), cy = c.offsetHeight/2 + 85;
+        for (let i=0; i<6; i++) {
             const p = document.createElement('div');
             p.className = 'particle';
             p.style.background = 'rgba(180,170,150,0.5)';
-            const s = 2 + Math.random() * 3;
-            p.style.width = s+'px'; p.style.height = s+'px';
-            p.style.left = cx+'px'; p.style.top = cy+'px';
-            const angle = Math.PI + (Math.random()-0.5)*2.2;
-            const dist = 15 + Math.random()*30;
-            const dx = Math.cos(angle)*dist, dy = Math.sin(angle)*dist*0.35;
-            const dur = 250 + Math.random()*200;
-            p.animate([
-                { opacity: 0.5, transform: 'translate(0,0) scale(1)' },
-                { opacity: 0, transform: `translate(${dx}px,${dy}px) scale(0.2)` }
-            ], { duration: dur, easing: 'ease-out' });
-            c.appendChild(p);
-            setTimeout(() => p.remove(), dur);
+            const s = 2+Math.random()*3;
+            p.style.width=s+'px'; p.style.height=s+'px';
+            p.style.left=cx+'px'; p.style.top=cy+'px';
+            const a = Math.PI+(Math.random()-0.5)*2.2, d=15+Math.random()*30;
+            const dx=Math.cos(a)*d, dy=Math.sin(a)*d*0.35;
+            const dur=250+Math.random()*200;
+            p.animate([{opacity:0.5,transform:'translate(0,0) scale(1)'},{opacity:0,transform:`translate(${dx}px,${dy}px) scale(0.2)`}],{duration:dur,easing:'ease-out'});
+            c.appendChild(p); setTimeout(()=>p.remove(),dur);
         }
     }
 
-    function spawnImpactRing(color) {
+    function spawnRing(color) {
         const c = document.getElementById('particles');
-        const cx = c.offsetWidth/2, cy = c.offsetHeight/2;
-        const ring = document.createElement('div');
-        ring.className = 'impact-ring';
-        ring.style.borderColor = color;
-        ring.style.left = cx+'px'; ring.style.top = cy+'px';
-        ring.animate([
-            { width:'0', height:'0', marginLeft:'0', marginTop:'0', opacity:0.8, borderWidth:'3px' },
-            { width:'220px', height:'220px', marginLeft:'-110px', marginTop:'-110px', opacity:0, borderWidth:'1px' },
-        ], { duration: 550, easing: 'ease-out' });
-        c.appendChild(ring);
-        setTimeout(() => ring.remove(), 550);
+        const cx=c.offsetWidth/2, cy=c.offsetHeight/2;
+        const r = document.createElement('div');
+        r.className='impact-ring'; r.style.borderColor=color;
+        r.style.left=cx+'px'; r.style.top=cy+'px';
+        r.animate([
+            {width:'0',height:'0',marginLeft:'0',marginTop:'0',opacity:0.8,borderWidth:'3px'},
+            {width:'220px',height:'220px',marginLeft:'-110px',marginTop:'-110px',opacity:0,borderWidth:'1px'}
+        ],{duration:550,easing:'ease-out'});
+        c.appendChild(r); setTimeout(()=>r.remove(),550);
     }
 
-    function spawnParticles(color, count) {
+    function spawnParticles(color, n) {
         const c = document.getElementById('particles');
-        const cx = c.offsetWidth/2, cy = c.offsetHeight/2;
-        for (let i = 0; i < count; i++) {
-            const p = document.createElement('div');
-            p.className = 'particle';
-            p.style.background = color;
-            const s = 2 + Math.random()*5;
-            p.style.width = s+'px'; p.style.height = s+'px';
-            p.style.left = cx+'px'; p.style.top = cy+'px';
-            const angle = (Math.PI*2*i)/count + (Math.random()-0.5)*0.6;
-            const dist = 50 + Math.random()*130;
-            const dx = Math.cos(angle)*dist, dy = Math.sin(angle)*dist;
-            const dur = 450 + Math.random()*550;
-            const sparkle = Math.random() > 0.65;
+        const cx=c.offsetWidth/2, cy=c.offsetHeight/2;
+        for (let i=0; i<n; i++) {
+            const p=document.createElement('div');
+            p.className='particle'; p.style.background=color;
+            const s=2+Math.random()*5;
+            p.style.width=s+'px'; p.style.height=s+'px';
+            p.style.left=cx+'px'; p.style.top=cy+'px';
+            const a=(Math.PI*2*i)/n+(Math.random()-0.5)*0.6;
+            const dist=50+Math.random()*130;
+            const dx=Math.cos(a)*dist, dy=Math.sin(a)*dist;
+            const dur=450+Math.random()*550;
+            const sp=Math.random()>0.65;
             p.animate([
-                { opacity: 0.9, transform: 'translate(0,0) scale(1)' },
-                { opacity: sparkle?1:0.6, transform: `translate(${dx*0.4}px,${dy*0.4}px) scale(${sparkle?1.6:1})`, offset: 0.25 },
-                { opacity: 0, transform: `translate(${dx}px,${dy}px) scale(0)` }
-            ], { duration: dur, easing: 'cubic-bezier(0,0.3,0.5,1)' });
-            c.appendChild(p);
-            setTimeout(() => p.remove(), dur);
+                {opacity:0.9,transform:'translate(0,0) scale(1)'},
+                {opacity:sp?1:0.6,transform:`translate(${dx*0.4}px,${dy*0.4}px) scale(${sp?1.6:1})`,offset:0.25},
+                {opacity:0,transform:`translate(${dx}px,${dy}px) scale(0)`}
+            ],{duration:dur,easing:'cubic-bezier(0,0.3,0.5,1)'});
+            c.appendChild(p); setTimeout(()=>p.remove(),dur);
         }
     }
 
     // ─── Helpers ───
 
-    function stopAnimations() {
-        activeAnimations.forEach(a => { try { a.cancel(); } catch(e) {} });
-        activeAnimations = [];
-        stopNumberCycle();
+    function stopAll() {
+        activeAnims.forEach(a=>{try{a.cancel();}catch(e){}});
+        activeAnims=[];
+        if(numTimer){clearInterval(numTimer);numTimer=null;}
     }
 
     function confirmGameRoll() {
-        if (tg) {
-            tg.sendData(JSON.stringify({
-                action: 'roll_complete', result: GAME_RESULT,
-                formula: GAME_FORMULA, token: GAME_TOKEN, type: GAME_TYPE
-            }));
-        }
+        if(tg) tg.sendData(JSON.stringify({action:'roll_complete',result:GAME_RESULT,formula:GAME_FORMULA,token:GAME_TOKEN,type:GAME_TYPE}));
     }
 
     function resetRoll() {
         isRolling = false;
-        stopAnimations();
-
+        stopAll();
         const arena = document.getElementById('arena');
-        const container = document.getElementById('dieContainer');
+        const cube = document.getElementById('cube');
+        const viewport = document.getElementById('cubeViewport');
         const shadow = document.getElementById('dieShadow');
-        const numEl = document.getElementById('dieNumber');
-        const typeLabel = document.getElementById('dieTypeLabel');
-        const panel = document.getElementById('resultPanel');
-        const btnAction = document.getElementById('btnAction');
-        const btnReroll = document.getElementById('btnReroll');
-        const tapHint = document.getElementById('tapHint');
 
         arena.className = 'arena state-idle';
-        container.style.transform = '';
-        container.style.filter = '';
+        cube.style.transform = '';
+        viewport.style.transform = '';
         shadow.style.transform = '';
         shadow.style.opacity = '';
-        typeLabel.style.opacity = '';
-        numEl.style.opacity = '';
-        numEl.textContent = randInt(1, dieMax(currentDie));
-        panel.classList.remove('visible');
-        tapHint.style.display = '';
-        btnAction.textContent = 'Rolar Dados';
-        btnAction.disabled = false;
-        btnAction.onclick = onDieTap;
-        btnAction.style.display = '';
-        btnReroll.style.display = 'none';
+        randomizeFaces();
+        document.getElementById('resultPanel').classList.remove('visible');
+        document.getElementById('tapHint').style.display = '';
+        const btn = document.getElementById('btnAction');
+        btn.textContent = 'Rolar Dados'; btn.disabled = false; btn.onclick = onDieTap; btn.style.display = '';
+        document.getElementById('btnReroll').style.display = 'none';
     }
 
     function renderHistory() {
-        const el = document.getElementById('history');
-        el.innerHTML = rollHistory.slice(0, 10).map(h => {
-            const cls = h.isCrit ? 'h-crit' : h.isFail ? 'h-fail' : 'h-result';
-            return `<div class="history-item"><span>${h.die}${currentMod ? (currentMod>0?'+'+currentMod:currentMod) : ''}</span><span class="${cls}">${h.total}</span></div>`;
+        document.getElementById('history').innerHTML = rollHistory.slice(0,10).map(h => {
+            const cls = h.isCrit?'h-crit':h.isFail?'h-fail':'h-result';
+            return `<div class="history-item"><span>${h.die}${currentMod?(currentMod>0?'+'+currentMod:currentMod):''}</span><span class="${cls}">${h.total}</span></div>`;
         }).join('');
     }
 
