@@ -79,21 +79,27 @@
         }
         .particle {
             position: absolute;
-            width: 4px;
-            height: 4px;
             border-radius: 50%;
-            background: var(--gold);
             opacity: 0;
         }
 
-        /* Die container */
+        /* Die wrapper — handles trajectory (translate Y for throw arc + bounces) */
+        .die-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Die container — handles 3D rotation */
         .die-container {
             position: relative;
             width: 160px;
             height: 160px;
-            perspective: 600px;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
+            transform-style: preserve-3d;
+            perspective: 800px;
         }
 
         .die {
@@ -103,7 +109,19 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transform-style: preserve-3d;
             transition: transform 0.3s ease;
+        }
+
+        /* Ground shadow — ellipse beneath die */
+        .die-shadow {
+            width: 120px;
+            height: 24px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.15) 50%, transparent 70%);
+            margin-top: 8px;
+            transition: all 0.15s ease;
+            filter: blur(2px);
         }
 
         /* Die shapes */
@@ -114,6 +132,7 @@
             align-items: center;
             justify-content: center;
             position: relative;
+            transition: background 0.1s ease;
         }
 
         /* D20 - Icosahedron outline */
@@ -121,7 +140,6 @@
             clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
             background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
             border: none;
-            box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
         }
         .die-face.d20::before {
             content: '';
@@ -218,63 +236,36 @@
 
         /* Idle / Tap to Roll */
         .state-idle .die-container {
-            animation: idle-pulse 2s ease-in-out infinite;
+            animation: idle-float 3s ease-in-out infinite;
+        }
+        .state-idle .die-shadow {
+            animation: idle-shadow 3s ease-in-out infinite;
         }
         .tap-hint {
-            margin-top: 24px;
+            margin-top: 16px;
             font-size: 15px;
             color: var(--text-dim);
             animation: fade-pulse 2s ease-in-out infinite;
         }
-        @keyframes idle-pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.03); }
+        @keyframes idle-float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-8px) scale(1.02); }
+        }
+        @keyframes idle-shadow {
+            0%, 100% { transform: scaleX(1) scaleY(1); opacity: 0.7; }
+            50% { transform: scaleX(0.85) scaleY(0.85); opacity: 0.4; }
         }
         @keyframes fade-pulse {
             0%, 100% { opacity: 0.5; }
             50% { opacity: 1; }
         }
 
-        /* Rolling */
-        .state-rolling .die-container {
-            animation: roll-shake 0.12s linear infinite;
-        }
-        .state-rolling .die-number {
-            animation: number-cycle 0.08s step-end infinite;
-        }
-        @keyframes roll-shake {
-            0% { transform: translate(0, 0) rotate(0deg) scale(1.05); }
-            25% { transform: translate(-4px, 2px) rotate(-5deg) scale(1.08); }
-            50% { transform: translate(3px, -3px) rotate(4deg) scale(1.05); }
-            75% { transform: translate(-2px, 4px) rotate(-3deg) scale(1.08); }
-            100% { transform: translate(4px, -2px) rotate(5deg) scale(1.05); }
-        }
-
-        /* Slowing down */
-        .state-slowing .die-container {
-            animation: roll-slow 0.3s ease-out infinite;
-        }
-        @keyframes roll-slow {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            50% { transform: translate(-1px, 1px) rotate(-1deg); }
-            100% { transform: translate(1px, -1px) rotate(1deg); }
-        }
-
-        /* Result reveal */
-        .state-result .die-container {
-            animation: result-bounce 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
-        }
+        /* Result glow */
         .state-result .die-number {
             animation: result-glow 1.5s ease-in-out infinite;
         }
         .state-result .die-face {
             box-shadow: 0 0 40px var(--glow), 0 0 80px rgba(212, 175, 55, 0.15);
-        }
-        @keyframes result-bounce {
-            0% { transform: scale(1.1); }
-            30% { transform: scale(0.95); }
-            60% { transform: scale(1.05); }
-            100% { transform: scale(1); }
         }
         @keyframes result-glow {
             0%, 100% { text-shadow: 0 0 20px var(--glow), 0 2px 4px rgba(0,0,0,0.5); }
@@ -297,6 +288,31 @@
         }
         .state-result.crit-fail .die-face {
             box-shadow: 0 0 40px rgba(231, 76, 60, 0.4), 0 0 80px rgba(231, 76, 60, 0.15);
+        }
+
+        /* Screen shake for crits */
+        @keyframes screen-shake {
+            0%, 100% { transform: translate(0, 0); }
+            10% { transform: translate(-6px, 3px); }
+            20% { transform: translate(5px, -4px); }
+            30% { transform: translate(-4px, 5px); }
+            40% { transform: translate(3px, -2px); }
+            50% { transform: translate(-2px, 3px); }
+            60% { transform: translate(2px, -1px); }
+            70% { transform: translate(-1px, 1px); }
+            80% { transform: translate(1px, 0px); }
+        }
+        body.screen-shake {
+            animation: screen-shake 0.5s ease-out;
+        }
+
+        /* Impact flash ring */
+        .impact-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            pointer-events: none;
+            opacity: 0;
         }
 
         /* --- RESULT PANEL --- */
@@ -483,13 +499,16 @@
     <div class="arena state-idle" id="arena">
         <div class="particles" id="particles"></div>
 
-        <div class="die-container" id="dieContainer" onclick="onDieTap()">
-            <div class="die">
-                <div class="die-face d20" id="dieFace">
-                    <span class="die-number" id="dieNumber">20</span>
+        <div class="die-wrapper" id="dieWrapper">
+            <div class="die-container" id="dieContainer" onclick="onDieTap()">
+                <div class="die" id="die">
+                    <div class="die-face d20" id="dieFace">
+                        <span class="die-number" id="dieNumber">20</span>
+                    </div>
+                    <span class="die-type-label" id="dieTypeLabel">d20</span>
                 </div>
-                <span class="die-type-label" id="dieTypeLabel">d20</span>
             </div>
+            <div class="die-shadow" id="dieShadow"></div>
         </div>
 
         <div class="tap-hint" id="tapHint">Toque para rolar</div>
@@ -514,19 +533,18 @@
     if (tg) {
         tg.ready();
         tg.expand();
-        // Match Telegram theme
         const bgColor = tg.themeParams.bg_color || '#1a1a2e';
         document.body.style.background = bgColor;
     }
 
     // ─── URL Parameters ───
     const params = new URLSearchParams(window.location.search);
-    const MODE = params.get('mode') || 'free'; // 'game' or 'free'
-    const GAME_FORMULA = params.get('formula');  // e.g. "1d20+3"
-    const GAME_RESULT = params.get('r') ? parseInt(atob(params.get('r'))) : null; // pre-rolled result (base64)
-    const GAME_RAW = params.get('raw') ? JSON.parse(atob(params.get('raw'))) : null; // raw rolls
+    const MODE = params.get('mode') || 'free';
+    const GAME_FORMULA = params.get('formula');
+    const GAME_RESULT = params.get('r') ? parseInt(atob(params.get('r'))) : null;
+    const GAME_RAW = params.get('raw') ? JSON.parse(atob(params.get('raw'))) : null;
     const GAME_LABEL = params.get('label') ? decodeURIComponent(params.get('label')) : '';
-    const GAME_TYPE = params.get('type') || ''; // attack, skill, damage, save
+    const GAME_TYPE = params.get('type') || '';
     const GAME_DC = params.get('dc') ? parseInt(params.get('dc')) : null;
     const GAME_TOKEN = params.get('token') || '';
 
@@ -535,6 +553,7 @@
     let currentMod = 0;
     let isRolling = false;
     let rollHistory = [];
+    let activeAnimations = [];
 
     // ─── Init ───
     function init() {
@@ -545,11 +564,9 @@
             }
             if (GAME_FORMULA) {
                 document.getElementById('headerFormula').textContent = GAME_FORMULA;
-                // Parse die type from formula
                 const dieMatch = GAME_FORMULA.match(/d(\d+)/);
                 if (dieMatch) currentDie = 'd' + dieMatch[1];
             }
-            // Set title based on type
             const titles = {
                 'attack': 'Ataque',
                 'skill': 'Teste de Habilidade',
@@ -563,10 +580,8 @@
             }
         }
 
-        // Set die face shape
         setDieShape(currentDie);
 
-        // Dice selector clicks
         document.querySelectorAll('.dice-chip').forEach(chip => {
             chip.addEventListener('click', () => {
                 if (isRolling) return;
@@ -578,7 +593,6 @@
             });
         });
 
-        // Show initial random number
         const max = dieMax(currentDie);
         document.getElementById('dieNumber').textContent = randInt(1, max);
     }
@@ -604,7 +618,8 @@
         document.getElementById('modValue').textContent = modStr;
     }
 
-    // ─── Roll Logic ───
+    // ─── Physics-Based Roll Animation ───
+
     function onDieTap() {
         if (isRolling) return;
         isRolling = true;
@@ -612,11 +627,11 @@
         const arena = document.getElementById('arena');
         const tapHint = document.getElementById('tapHint');
         const btnAction = document.getElementById('btnAction');
-        const btnReroll = document.getElementById('btnReroll');
 
         tapHint.style.display = 'none';
         btnAction.disabled = true;
         document.getElementById('resultPanel').classList.remove('visible');
+        arena.className = 'arena';
 
         // Determine result
         const max = dieMax(currentDie);
@@ -627,66 +642,242 @@
             if (GAME_RAW) {
                 finalRaw = GAME_RAW;
             } else {
-                // Infer raw from total - modifier
                 const modMatch = GAME_FORMULA ? GAME_FORMULA.match(/[+-]\d+$/) : null;
                 const mod = modMatch ? parseInt(modMatch[0]) : 0;
                 finalRaw = [Math.max(1, Math.min(max, finalTotal - mod))];
             }
         } else {
-            // Free roll — client-side random
             finalRaw = [randInt(1, max)];
             finalTotal = finalRaw[0] + currentMod;
         }
 
-        // Start rolling animation
-        arena.className = 'arena state-rolling';
+        // Haptic — initial throw
+        haptic('medium');
 
-        const numEl = document.getElementById('dieNumber');
-        let cycleCount = 0;
-        const totalCycles = 20 + randInt(5, 15); // ~25-35 cycles
-        const baseDuration = 60; // ms per cycle start
-
-        function cycle() {
-            if (cycleCount >= totalCycles) {
-                showResult(finalRaw, finalTotal, max);
-                return;
-            }
-
-            // Show random number
-            numEl.textContent = randInt(1, max);
-            cycleCount++;
-
-            // Slow down progressively
-            const progress = cycleCount / totalCycles;
-            let delay;
-            if (progress < 0.5) {
-                delay = baseDuration;
-            } else if (progress < 0.8) {
-                arena.className = 'arena state-slowing';
-                delay = baseDuration + (progress - 0.5) * 400;
-            } else {
-                delay = baseDuration + (progress - 0.5) * 800;
-            }
-
-            setTimeout(cycle, delay);
-        }
-
-        // Haptic feedback
-        if (tg && tg.HapticFeedback) {
-            tg.HapticFeedback.impactOccurred('medium');
-        }
-
-        setTimeout(cycle, 100);
+        // Run the full physics animation sequence
+        animateThrow(finalRaw, finalTotal, max);
     }
 
-    function showResult(rawRolls, total, max) {
+    function animateThrow(finalRaw, finalTotal, max) {
+        const container = document.getElementById('dieContainer');
+        const die = document.getElementById('die');
+        const shadow = document.getElementById('dieShadow');
+        const numEl = document.getElementById('dieNumber');
+
+        // Cancel any previous animations
+        activeAnimations.forEach(a => a.cancel());
+        activeAnimations = [];
+
+        // Random rotation direction per axis
+        const rxDir = (Math.random() > 0.5 ? 1 : -1);
+        const ryDir = (Math.random() > 0.5 ? 1 : -1);
+        const rzDir = (Math.random() > 0.5 ? 1 : -1);
+        const totalSpins = 3 + Math.random() * 2; // 3-5 full rotations
+        const rxTotal = rxDir * totalSpins * 360;
+        const ryTotal = ryDir * (totalSpins + Math.random()) * 360;
+        const rzTotal = rzDir * (totalSpins * 0.5) * 360;
+
+        // Lateral drift — die doesn't land exactly where it started
+        const driftX = (Math.random() - 0.5) * 40; // -20..+20 px
+
+        // ─── Phase 1: Throw (lift + tumble) ─── 600ms
+        const throwDuration = 600;
+
+        // Die trajectory: up arc then down
+        const throwAnim = container.animate([
+            { transform: `translateY(0px) translateX(0px)`, offset: 0 },
+            { transform: `translateY(-80px) translateX(${driftX * 0.3}px)`, offset: 0.35 },
+            { transform: `translateY(-90px) translateX(${driftX * 0.5}px)`, offset: 0.5 },
+            { transform: `translateY(-60px) translateX(${driftX * 0.75}px)`, offset: 0.7 },
+            { transform: `translateY(0px) translateX(${driftX}px)`, offset: 1.0 },
+        ], {
+            duration: throwDuration,
+            easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+            fill: 'forwards',
+        });
+        activeAnimations.push(throwAnim);
+
+        // 3D tumble during throw
+        const tumbleAnim = die.animate([
+            { transform: `rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1)` },
+            { transform: `rotateX(${rxTotal * 0.4}deg) rotateY(${ryTotal * 0.4}deg) rotateZ(${rzTotal * 0.4}deg) scale(1.08)`, offset: 0.35 },
+            { transform: `rotateX(${rxTotal * 0.55}deg) rotateY(${ryTotal * 0.55}deg) rotateZ(${rzTotal * 0.55}deg) scale(1.05)`, offset: 0.5 },
+            { transform: `rotateX(${rxTotal * 0.8}deg) rotateY(${ryTotal * 0.8}deg) rotateZ(${rzTotal * 0.8}deg) scale(1.02)` , offset: 0.8},
+            { transform: `rotateX(${rxTotal}deg) rotateY(${ryTotal}deg) rotateZ(${rzTotal}deg) scale(1)` },
+        ], {
+            duration: throwDuration,
+            easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+            fill: 'forwards',
+        });
+        activeAnimations.push(tumbleAnim);
+
+        // Shadow scales with "height"
+        const shadowThrowAnim = shadow.animate([
+            { transform: 'scaleX(1) scaleY(1)', opacity: 0.7, offset: 0 },
+            { transform: 'scaleX(0.5) scaleY(0.5)', opacity: 0.2, offset: 0.35 },
+            { transform: 'scaleX(0.45) scaleY(0.45)', opacity: 0.15, offset: 0.5 },
+            { transform: 'scaleX(0.6) scaleY(0.6)', opacity: 0.3, offset: 0.7 },
+            { transform: 'scaleX(1.15) scaleY(1.15)', opacity: 0.8, offset: 1.0 },
+        ], {
+            duration: throwDuration,
+            easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+            fill: 'forwards',
+        });
+        activeAnimations.push(shadowThrowAnim);
+
+        // Number cycling during throw — fast random
+        let numberInterval = setInterval(() => {
+            numEl.textContent = randInt(1, max);
+        }, 50);
+
+        // ─── Phase 2: First bounce ─── at throwDuration
+        setTimeout(() => {
+            haptic('light');
+            spawnImpactDust(driftX);
+
+            // First bounce: up 30px then back
+            const bounce1 = container.animate([
+                { transform: `translateY(0px) translateX(${driftX}px)`, offset: 0 },
+                { transform: `translateY(-30px) translateX(${driftX + 4}px)`, offset: 0.45 },
+                { transform: `translateY(0px) translateX(${driftX + 6}px)`, offset: 1.0 },
+            ], {
+                duration: 300,
+                easing: 'cubic-bezier(0.33, 0, 0.67, 1)',
+                fill: 'forwards',
+            });
+            activeAnimations.push(bounce1);
+
+            // Continue tumbling but slower
+            const rxB1 = rxTotal + rxDir * 180;
+            const ryB1 = ryTotal + ryDir * 200;
+            const rzB1 = rzTotal + rzDir * 90;
+            const tumble1 = die.animate([
+                { transform: `rotateX(${rxTotal}deg) rotateY(${ryTotal}deg) rotateZ(${rzTotal}deg) scale(1)` },
+                { transform: `rotateX(${rxB1}deg) rotateY(${ryB1}deg) rotateZ(${rzB1}deg) scale(1.03)`, offset: 0.45 },
+                { transform: `rotateX(${rxB1 + rxDir * 40}deg) rotateY(${ryB1 + ryDir * 40}deg) rotateZ(${rzB1}deg) scale(1)` },
+            ], {
+                duration: 300,
+                easing: 'cubic-bezier(0.33, 0, 0.67, 1)',
+                fill: 'forwards',
+            });
+            activeAnimations.push(tumble1);
+
+            // Shadow bounce 1
+            const shB1 = shadow.animate([
+                { transform: 'scaleX(1.15) scaleY(1.15)', opacity: 0.8, offset: 0 },
+                { transform: 'scaleX(0.7) scaleY(0.7)', opacity: 0.35, offset: 0.45 },
+                { transform: 'scaleX(1.1) scaleY(1.1)', opacity: 0.75, offset: 1.0 },
+            ], {
+                duration: 300,
+                easing: 'cubic-bezier(0.33, 0, 0.67, 1)',
+                fill: 'forwards',
+            });
+            activeAnimations.push(shB1);
+
+            // Slow down number cycling
+            clearInterval(numberInterval);
+            numberInterval = setInterval(() => {
+                numEl.textContent = randInt(1, max);
+            }, 90);
+
+        }, throwDuration);
+
+        // ─── Phase 3: Second bounce (smaller) ─── at throwDuration + 300
+        const t2 = throwDuration + 300;
+        const finalDriftX = driftX + 6;
+        setTimeout(() => {
+            haptic('light');
+
+            const bounce2 = container.animate([
+                { transform: `translateY(0px) translateX(${finalDriftX}px)`, offset: 0 },
+                { transform: `translateY(-12px) translateX(${finalDriftX + 2}px)`, offset: 0.45 },
+                { transform: `translateY(0px) translateX(${finalDriftX + 3}px)`, offset: 1.0 },
+            ], {
+                duration: 200,
+                easing: 'cubic-bezier(0.33, 0, 0.67, 1)',
+                fill: 'forwards',
+            });
+            activeAnimations.push(bounce2);
+
+            // Shadow bounce 2
+            const shB2 = shadow.animate([
+                { transform: 'scaleX(1.1) scaleY(1.1)', opacity: 0.75, offset: 0 },
+                { transform: 'scaleX(0.85) scaleY(0.85)', opacity: 0.5, offset: 0.45 },
+                { transform: 'scaleX(1.05) scaleY(1.05)', opacity: 0.7, offset: 1.0 },
+            ], {
+                duration: 200,
+                easing: 'cubic-bezier(0.33, 0, 0.67, 1)',
+                fill: 'forwards',
+            });
+            activeAnimations.push(shB2);
+
+            // Even slower cycling
+            clearInterval(numberInterval);
+            numberInterval = setInterval(() => {
+                numEl.textContent = randInt(1, max);
+            }, 150);
+
+        }, t2);
+
+        // ─── Phase 4: Wobble settle ─── at t2 + 200
+        const t3 = t2 + 200;
+        const settleX = finalDriftX + 3;
+        setTimeout(() => {
+            clearInterval(numberInterval);
+
+            // Show near-final values with decreasing frequency
+            let wobbleCount = 0;
+            const wobbleValues = [randInt(1, max), randInt(1, max), finalRaw[0]];
+
+            function wobbleTick() {
+                if (wobbleCount >= wobbleValues.length) {
+                    // Final settle — show actual result
+                    finishRoll(finalRaw, finalTotal, max, settleX);
+                    return;
+                }
+                numEl.textContent = wobbleValues[wobbleCount];
+                wobbleCount++;
+                setTimeout(wobbleTick, 120 + wobbleCount * 80);
+            }
+
+            // Wobble rotation — small oscillating rotations settling to flat
+            const wobbleR = die.animate([
+                { transform: `rotateX(0deg) rotateY(0deg) rotateZ(${rzDir * 6}deg)` },
+                { transform: `rotateX(0deg) rotateY(0deg) rotateZ(${-rzDir * 4}deg)`, offset: 0.3 },
+                { transform: `rotateX(0deg) rotateY(0deg) rotateZ(${rzDir * 2}deg)`, offset: 0.6 },
+                { transform: `rotateX(0deg) rotateY(0deg) rotateZ(0deg)` },
+            ], {
+                duration: 500,
+                easing: 'ease-out',
+                fill: 'forwards',
+            });
+            activeAnimations.push(wobbleR);
+
+            // Shadow settles
+            const shSettle = shadow.animate([
+                { transform: 'scaleX(1.05) scaleY(1.05)', opacity: 0.7 },
+                { transform: 'scaleX(1) scaleY(1)', opacity: 0.65 },
+            ], {
+                duration: 500,
+                easing: 'ease-out',
+                fill: 'forwards',
+            });
+            activeAnimations.push(shSettle);
+
+            wobbleTick();
+        }, t3);
+    }
+
+    function finishRoll(rawRolls, total, max, settleX) {
         const arena = document.getElementById('arena');
+        const container = document.getElementById('dieContainer');
+        const die = document.getElementById('die');
         const numEl = document.getElementById('dieNumber');
         const panel = document.getElementById('resultPanel');
         const btnAction = document.getElementById('btnAction');
         const btnReroll = document.getElementById('btnReroll');
 
-        // Display raw value on the die face
+        // Show final number
         numEl.textContent = rawRolls[0];
 
         // Determine critical
@@ -698,15 +889,42 @@
         if (isFail) stateClass += ' crit-fail';
         arena.className = stateClass;
 
+        // Result pop — scale up then settle
+        const popAnim = container.animate([
+            { transform: `translateX(${settleX}px) scale(1)` },
+            { transform: `translateX(${settleX * 0.5}px) scale(1.12)`, offset: 0.3 },
+            { transform: `translateX(0px) scale(1)` },
+        ], {
+            duration: 400,
+            easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+            fill: 'forwards',
+        });
+        activeAnimations.push(popAnim);
+
+        // Die back to neutral rotation
+        const flatAnim = die.animate([
+            { transform: 'rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1)' },
+        ], {
+            duration: 200,
+            fill: 'forwards',
+        });
+        activeAnimations.push(flatAnim);
+
         // Haptic
-        if (tg && tg.HapticFeedback) {
-            if (isCrit) tg.HapticFeedback.notificationOccurred('success');
-            else if (isFail) tg.HapticFeedback.notificationOccurred('error');
-            else tg.HapticFeedback.impactOccurred('heavy');
+        if (isCrit || isFail) {
+            haptic('heavy');
+            // Screen shake for crits
+            document.body.classList.add('screen-shake');
+            setTimeout(() => document.body.classList.remove('screen-shake'), 500);
+            // Impact ring
+            spawnImpactRing(isCrit ? '#2ecc71' : '#e74c3c');
+        } else {
+            haptic('heavy');
         }
 
         // Particles
-        spawnParticles(isCrit ? '#2ecc71' : isFail ? '#e74c3c' : '#d4af37');
+        const particleColor = isCrit ? '#2ecc71' : isFail ? '#e74c3c' : '#d4af37';
+        spawnParticles(particleColor, isCrit || isFail ? 36 : 24);
 
         // Result panel
         document.getElementById('resultTotal').textContent = total;
@@ -759,8 +977,106 @@
         }
     }
 
+    // ─── Impact Effects ───
+
+    function spawnImpactDust(offsetX) {
+        const container = document.getElementById('particles');
+        const cx = container.offsetWidth / 2 + offsetX;
+        const cy = container.offsetHeight / 2 + 80; // Below die center
+
+        for (let i = 0; i < 8; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.background = 'rgba(200, 200, 200, 0.4)';
+            p.style.width = (3 + Math.random() * 3) + 'px';
+            p.style.height = p.style.width;
+            p.style.left = cx + 'px';
+            p.style.top = cy + 'px';
+
+            const angle = Math.PI + (Math.random() - 0.5) * Math.PI; // Spread downward
+            const dist = 20 + Math.random() * 40;
+            const dx = Math.cos(angle) * dist;
+            const dy = Math.sin(angle) * dist * 0.4; // Flatten vertically
+            const duration = 300 + Math.random() * 200;
+
+            p.animate([
+                { opacity: 0.6, transform: 'translate(0, 0) scale(1)' },
+                { opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(0.3)` }
+            ], { duration, easing: 'ease-out' });
+
+            container.appendChild(p);
+            setTimeout(() => p.remove(), duration);
+        }
+    }
+
+    function spawnImpactRing(color) {
+        const container = document.getElementById('particles');
+        const cx = container.offsetWidth / 2;
+        const cy = container.offsetHeight / 2;
+
+        const ring = document.createElement('div');
+        ring.className = 'impact-ring';
+        ring.style.borderColor = color;
+        ring.style.left = cx + 'px';
+        ring.style.top = cy + 'px';
+
+        ring.animate([
+            { width: '0px', height: '0px', marginLeft: '0px', marginTop: '0px', opacity: 0.8, borderWidth: '3px' },
+            { width: '200px', height: '200px', marginLeft: '-100px', marginTop: '-100px', opacity: 0, borderWidth: '1px' },
+        ], {
+            duration: 600,
+            easing: 'ease-out',
+        });
+
+        container.appendChild(ring);
+        setTimeout(() => ring.remove(), 600);
+    }
+
+    // ─── Particles ───
+    function spawnParticles(color, count) {
+        const container = document.getElementById('particles');
+        const cx = container.offsetWidth / 2;
+        const cy = container.offsetHeight / 2;
+
+        for (let i = 0; i < count; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.background = color;
+            const size = 3 + Math.random() * 4;
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+            p.style.left = cx + 'px';
+            p.style.top = cy + 'px';
+
+            const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
+            const dist = 60 + Math.random() * 120;
+            const dx = Math.cos(angle) * dist;
+            const dy = Math.sin(angle) * dist;
+            const duration = 500 + Math.random() * 500;
+
+            // Some particles sparkle (flash bright then fade)
+            const sparkle = Math.random() > 0.6;
+            const midOpacity = sparkle ? 1 : 0.7;
+
+            p.animate([
+                { opacity: 0.9, transform: 'translate(0, 0) scale(1)' },
+                { opacity: midOpacity, transform: `translate(${dx * 0.5}px, ${dy * 0.5}px) scale(${sparkle ? 1.5 : 1})`, offset: 0.3 },
+                { opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(0)` }
+            ], { duration, easing: 'cubic-bezier(0, 0.4, 0.5, 1)' });
+
+            container.appendChild(p);
+            setTimeout(() => p.remove(), duration);
+        }
+    }
+
+    // ─── Haptic Helper ───
+    function haptic(style) {
+        if (tg && tg.HapticFeedback) {
+            tg.HapticFeedback.impactOccurred(style);
+        }
+    }
+
     function confirmGameRoll() {
-        // Send data back to bot
         if (tg) {
             const data = JSON.stringify({
                 action: 'roll_complete',
@@ -775,7 +1091,13 @@
 
     function resetRoll() {
         isRolling = false;
+        activeAnimations.forEach(a => a.cancel());
+        activeAnimations = [];
+
         const arena = document.getElementById('arena');
+        const container = document.getElementById('dieContainer');
+        const die = document.getElementById('die');
+        const shadow = document.getElementById('dieShadow');
         const numEl = document.getElementById('dieNumber');
         const panel = document.getElementById('resultPanel');
         const btnAction = document.getElementById('btnAction');
@@ -783,6 +1105,10 @@
         const tapHint = document.getElementById('tapHint');
 
         arena.className = 'arena state-idle';
+        container.style.transform = '';
+        die.style.transform = '';
+        shadow.style.transform = '';
+        shadow.style.opacity = '';
         numEl.textContent = randInt(1, dieMax(currentDie));
         panel.classList.remove('visible');
         tapHint.style.display = '';
@@ -791,35 +1117,6 @@
         btnAction.onclick = onDieTap;
         btnAction.style.display = '';
         btnReroll.style.display = 'none';
-    }
-
-    // ─── Particles ───
-    function spawnParticles(color) {
-        const container = document.getElementById('particles');
-        const cx = container.offsetWidth / 2;
-        const cy = container.offsetHeight / 2;
-
-        for (let i = 0; i < 24; i++) {
-            const p = document.createElement('div');
-            p.className = 'particle';
-            p.style.background = color;
-            p.style.left = cx + 'px';
-            p.style.top = cy + 'px';
-
-            const angle = (Math.PI * 2 * i) / 24 + (Math.random() - 0.5) * 0.5;
-            const dist = 80 + Math.random() * 100;
-            const dx = Math.cos(angle) * dist;
-            const dy = Math.sin(angle) * dist;
-            const duration = 600 + Math.random() * 400;
-
-            p.animate([
-                { opacity: 1, transform: 'translate(0, 0) scale(1)' },
-                { opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(0)` }
-            ], { duration, easing: 'cubic-bezier(0, 0.5, 0.5, 1)' });
-
-            container.appendChild(p);
-            setTimeout(() => p.remove(), duration);
-        }
     }
 
     // ─── History ───
