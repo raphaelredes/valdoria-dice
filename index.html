@@ -70,7 +70,7 @@
             padding: 20px;
         }
 
-        /* Particle container */
+        /* Particle / effect container */
         .particles {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -83,7 +83,7 @@
             opacity: 0;
         }
 
-        /* Die wrapper — handles trajectory (translate Y for throw arc + bounces) */
+        /* Die wrapper — vertical position (throw arc + bounces) */
         .die-wrapper {
             position: relative;
             display: flex;
@@ -91,15 +91,13 @@
             align-items: center;
         }
 
-        /* Die container — handles 3D rotation */
+        /* Die container — holds die + label, handles scale/rotate/translate */
         .die-container {
             position: relative;
             width: 160px;
             height: 160px;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
-            transform-style: preserve-3d;
-            perspective: 800px;
         }
 
         .die {
@@ -109,19 +107,16 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transform-style: preserve-3d;
-            transition: transform 0.3s ease;
         }
 
-        /* Ground shadow — ellipse beneath die */
+        /* Ground shadow */
         .die-shadow {
             width: 120px;
-            height: 24px;
+            height: 20px;
             border-radius: 50%;
-            background: radial-gradient(ellipse, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.15) 50%, transparent 70%);
-            margin-top: 8px;
-            transition: all 0.15s ease;
-            filter: blur(2px);
+            background: radial-gradient(ellipse, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.15) 50%, transparent 72%);
+            margin-top: 6px;
+            filter: blur(3px);
         }
 
         /* Die shapes */
@@ -132,14 +127,11 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            transition: background 0.1s ease;
         }
 
-        /* D20 - Icosahedron outline */
         .die-face.d20 {
             clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
             background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
-            border: none;
         }
         .die-face.d20::before {
             content: '';
@@ -149,7 +141,6 @@
             background: linear-gradient(135deg, #3a3a5a, #2a2a4a);
         }
 
-        /* D12 - Pentagon-ish */
         .die-face.d12 {
             clip-path: polygon(50% 0%, 95% 35%, 80% 90%, 20% 90%, 5% 35%);
             background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
@@ -162,7 +153,6 @@
             background: linear-gradient(135deg, #3a3a5a, #2a2a4a);
         }
 
-        /* D10 - Diamond */
         .die-face.d10 {
             clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 20% 100%, 0% 40%);
             background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
@@ -175,7 +165,6 @@
             background: linear-gradient(135deg, #3a3a5a, #2a2a4a);
         }
 
-        /* D8 - Diamond */
         .die-face.d8 {
             clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
             background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
@@ -188,14 +177,12 @@
             background: linear-gradient(135deg, #3a3a5a, #2a2a4a);
         }
 
-        /* D6 - Square with rounded corners */
         .die-face.d6 {
             border-radius: 16px;
             background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
             border: 2px solid #3a3a5a;
         }
 
-        /* D4 - Triangle */
         .die-face.d4 {
             clip-path: polygon(50% 5%, 97% 95%, 3% 95%);
             background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
@@ -217,24 +204,24 @@
             color: var(--gold);
             text-shadow: 0 0 20px var(--glow), 0 2px 4px rgba(0,0,0,0.5);
             font-variant-numeric: tabular-nums;
+            transition: opacity 0.06s;
         }
 
         .die-type-label {
             position: absolute;
-            bottom: -8px;
-            right: -8px;
-            font-size: 14px;
+            bottom: 4px;
+            right: 4px;
+            font-size: 12px;
             color: var(--text-dim);
             font-weight: 700;
-            background: var(--bg);
-            padding: 2px 6px;
-            border-radius: 4px;
+            opacity: 0.6;
             z-index: 3;
+            pointer-events: none;
         }
 
         /* --- STATES --- */
 
-        /* Idle / Tap to Roll */
+        /* Idle — gentle float */
         .state-idle .die-container {
             animation: idle-float 3s ease-in-out infinite;
         }
@@ -249,11 +236,11 @@
         }
         @keyframes idle-float {
             0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-8px) scale(1.02); }
+            50% { transform: translateY(-6px) scale(1.02); }
         }
         @keyframes idle-shadow {
-            0%, 100% { transform: scaleX(1) scaleY(1); opacity: 0.7; }
-            50% { transform: scaleX(0.85) scaleY(0.85); opacity: 0.4; }
+            0%, 100% { transform: scaleX(1); opacity: 0.6; }
+            50% { transform: scaleX(0.88); opacity: 0.35; }
         }
         @keyframes fade-pulse {
             0%, 100% { opacity: 0.5; }
@@ -272,7 +259,7 @@
             50% { text-shadow: 0 0 40px var(--gold), 0 0 60px var(--glow), 0 2px 4px rgba(0,0,0,0.5); }
         }
 
-        /* Critical styling */
+        /* Critical */
         .state-result.critical .die-number {
             color: var(--green);
             font-size: 56px;
@@ -290,23 +277,19 @@
             box-shadow: 0 0 40px rgba(231, 76, 60, 0.4), 0 0 80px rgba(231, 76, 60, 0.15);
         }
 
-        /* Screen shake for crits */
+        /* Screen shake on crits */
         @keyframes screen-shake {
             0%, 100% { transform: translate(0, 0); }
-            10% { transform: translate(-6px, 3px); }
-            20% { transform: translate(5px, -4px); }
-            30% { transform: translate(-4px, 5px); }
+            10% { transform: translate(-5px, 3px); }
+            20% { transform: translate(4px, -3px); }
+            30% { transform: translate(-3px, 4px); }
             40% { transform: translate(3px, -2px); }
-            50% { transform: translate(-2px, 3px); }
-            60% { transform: translate(2px, -1px); }
-            70% { transform: translate(-1px, 1px); }
-            80% { transform: translate(1px, 0px); }
+            50% { transform: translate(-2px, 2px); }
+            60% { transform: translate(1px, -1px); }
         }
-        body.screen-shake {
-            animation: screen-shake 0.5s ease-out;
-        }
+        body.screen-shake { animation: screen-shake 0.45s ease-out; }
 
-        /* Impact flash ring */
+        /* Impact ring */
         .impact-ring {
             position: absolute;
             border-radius: 50%;
@@ -379,12 +362,9 @@
             color: var(--text);
             border: 1px solid rgba(255,255,255,0.15);
         }
-        .btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        /* --- DICE SELECTOR (for free-roll mode) --- */
+        /* --- DICE SELECTOR --- */
         .dice-selector {
             display: flex;
             gap: 8px;
@@ -478,7 +458,6 @@
         <div class="formula-display" id="headerFormula"></div>
     </div>
 
-    <!-- Dice type selector (free-roll mode only) -->
     <div class="dice-selector" id="diceSelector">
         <div class="dice-chip active" data-die="d4">d4</div>
         <div class="dice-chip" data-die="d6">d6</div>
@@ -488,7 +467,6 @@
         <div class="dice-chip" data-die="d20">d20</div>
     </div>
 
-    <!-- Modifier controls (free-roll mode only) -->
     <div class="mod-row" id="modRow">
         <span style="font-size:13px;color:var(--text-dim)">Modificador:</span>
         <button class="mod-btn" onclick="changeMod(-1)">-</button>
@@ -501,7 +479,7 @@
 
         <div class="die-wrapper" id="dieWrapper">
             <div class="die-container" id="dieContainer" onclick="onDieTap()">
-                <div class="die" id="die">
+                <div class="die">
                     <div class="die-face d20" id="dieFace">
                         <span class="die-number" id="dieNumber">20</span>
                     </div>
@@ -554,34 +532,22 @@
     let isRolling = false;
     let rollHistory = [];
     let activeAnimations = [];
+    let numberTimer = null;
 
     // ─── Init ───
     function init() {
         if (MODE === 'game') {
             document.body.classList.add('game-mode');
-            if (GAME_LABEL) {
-                document.getElementById('headerLabel').textContent = GAME_LABEL;
-            }
+            if (GAME_LABEL) document.getElementById('headerLabel').textContent = GAME_LABEL;
             if (GAME_FORMULA) {
                 document.getElementById('headerFormula').textContent = GAME_FORMULA;
-                const dieMatch = GAME_FORMULA.match(/d(\d+)/);
-                if (dieMatch) currentDie = 'd' + dieMatch[1];
+                const m = GAME_FORMULA.match(/d(\d+)/);
+                if (m) currentDie = 'd' + m[1];
             }
-            const titles = {
-                'attack': 'Ataque',
-                'skill': 'Teste de Habilidade',
-                'damage': 'Dano',
-                'save': 'Salvaguarda',
-                'initiative': 'Iniciativa',
-                'death_save': 'Salvaguarda contra Morte'
-            };
-            if (titles[GAME_TYPE]) {
-                document.getElementById('headerTitle').textContent = titles[GAME_TYPE];
-            }
+            const titles = { 'attack':'Ataque', 'skill':'Teste de Habilidade', 'damage':'Dano', 'save':'Salvaguarda', 'initiative':'Iniciativa', 'death_save':'Salvaguarda contra Morte' };
+            if (titles[GAME_TYPE]) document.getElementById('headerTitle').textContent = titles[GAME_TYPE];
         }
-
         setDieShape(currentDie);
-
         document.querySelectorAll('.dice-chip').forEach(chip => {
             chip.addEventListener('click', () => {
                 if (isRolling) return;
@@ -592,33 +558,28 @@
                 resetRoll();
             });
         });
-
-        const max = dieMax(currentDie);
-        document.getElementById('dieNumber').textContent = randInt(1, max);
+        document.getElementById('dieNumber').textContent = randInt(1, dieMax(currentDie));
     }
 
-    function dieMax(die) {
-        return parseInt(die.replace('d', ''));
-    }
+    function dieMax(d) { return parseInt(d.replace('d', '')); }
+    function randInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
 
-    function randInt(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
-    function setDieShape(die) {
-        const face = document.getElementById('dieFace');
-        face.className = 'die-face ' + die;
-        document.getElementById('dieTypeLabel').textContent = die;
+    function setDieShape(d) {
+        document.getElementById('dieFace').className = 'die-face ' + d;
+        document.getElementById('dieTypeLabel').textContent = d;
     }
 
     function changeMod(delta) {
         if (isRolling) return;
         currentMod = Math.max(-10, Math.min(20, currentMod + delta));
-        const modStr = currentMod >= 0 ? '+' + currentMod : '' + currentMod;
-        document.getElementById('modValue').textContent = modStr;
+        document.getElementById('modValue').textContent = currentMod >= 0 ? '+' + currentMod : '' + currentMod;
     }
 
-    // ─── Physics-Based Roll Animation ───
+    function haptic(style) { if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred(style); }
+
+    // ─── Animation Engine ───
+    // Uses ONLY: translateX, translateY, scale, rotate(Z) — NO rotateX/Y (avoids flat distortion)
+    // 3D illusion from: arc trajectory, scale=depth, fast spin, motion blur, shadow sync, number cycling
 
     function onDieTap() {
         if (isRolling) return;
@@ -636,14 +597,12 @@
         // Determine result
         const max = dieMax(currentDie);
         let finalRaw, finalTotal;
-
         if (MODE === 'game' && GAME_RESULT !== null) {
             finalTotal = GAME_RESULT;
-            if (GAME_RAW) {
-                finalRaw = GAME_RAW;
-            } else {
-                const modMatch = GAME_FORMULA ? GAME_FORMULA.match(/[+-]\d+$/) : null;
-                const mod = modMatch ? parseInt(modMatch[0]) : 0;
+            if (GAME_RAW) { finalRaw = GAME_RAW; }
+            else {
+                const mm = GAME_FORMULA ? GAME_FORMULA.match(/[+-]\d+$/) : null;
+                const mod = mm ? parseInt(mm[0]) : 0;
                 finalRaw = [Math.max(1, Math.min(max, finalTotal - mod))];
             }
         } else {
@@ -651,236 +610,186 @@
             finalTotal = finalRaw[0] + currentMod;
         }
 
-        // Haptic — initial throw
         haptic('medium');
-
-        // Run the full physics animation sequence
-        animateThrow(finalRaw, finalTotal, max);
+        animateRoll(finalRaw, finalTotal, max);
     }
 
-    function animateThrow(finalRaw, finalTotal, max) {
+    function animateRoll(finalRaw, finalTotal, max) {
         const container = document.getElementById('dieContainer');
-        const die = document.getElementById('die');
         const shadow = document.getElementById('dieShadow');
         const numEl = document.getElementById('dieNumber');
+        const typeLabel = document.getElementById('dieTypeLabel');
 
-        // Cancel any previous animations
-        activeAnimations.forEach(a => a.cancel());
-        activeAnimations = [];
+        // Cleanup
+        stopAnimations();
 
-        // Random rotation direction per axis
-        const rxDir = (Math.random() > 0.5 ? 1 : -1);
-        const ryDir = (Math.random() > 0.5 ? 1 : -1);
-        const rzDir = (Math.random() > 0.5 ? 1 : -1);
-        const totalSpins = 3 + Math.random() * 2; // 3-5 full rotations
-        const rxTotal = rxDir * totalSpins * 360;
-        const ryTotal = ryDir * (totalSpins + Math.random()) * 360;
-        const rzTotal = rzDir * (totalSpins * 0.5) * 360;
+        // Hide type label during roll (it would spin with the die)
+        typeLabel.style.opacity = '0';
 
-        // Lateral drift — die doesn't land exactly where it started
-        const driftX = (Math.random() - 0.5) * 40; // -20..+20 px
+        // Random parameters
+        const spinDir = Math.random() > 0.5 ? 1 : -1;
+        const totalSpin = spinDir * (720 + randInt(180, 540)); // 2-3.5 full spins
+        const driftX = (Math.random() - 0.5) * 50;
 
-        // ─── Phase 1: Throw (lift + tumble) ─── 600ms
-        const throwDuration = 600;
+        // ─── Phase 1: THROW — 550ms ───
+        // Arc up with scale increase (closer to camera), spin fast, blur
 
-        // Die trajectory: up arc then down
-        const throwAnim = container.animate([
-            { transform: `translateY(0px) translateX(0px)`, offset: 0 },
-            { transform: `translateY(-80px) translateX(${driftX * 0.3}px)`, offset: 0.35 },
-            { transform: `translateY(-90px) translateX(${driftX * 0.5}px)`, offset: 0.5 },
-            { transform: `translateY(-60px) translateX(${driftX * 0.75}px)`, offset: 0.7 },
-            { transform: `translateY(0px) translateX(${driftX}px)`, offset: 1.0 },
-        ], {
-            duration: throwDuration,
-            easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
-            fill: 'forwards',
-        });
-        activeAnimations.push(throwAnim);
+        const throwMs = 550;
 
-        // 3D tumble during throw
-        const tumbleAnim = die.animate([
-            { transform: `rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1)` },
-            { transform: `rotateX(${rxTotal * 0.4}deg) rotateY(${ryTotal * 0.4}deg) rotateZ(${rzTotal * 0.4}deg) scale(1.08)`, offset: 0.35 },
-            { transform: `rotateX(${rxTotal * 0.55}deg) rotateY(${ryTotal * 0.55}deg) rotateZ(${rzTotal * 0.55}deg) scale(1.05)`, offset: 0.5 },
-            { transform: `rotateX(${rxTotal * 0.8}deg) rotateY(${ryTotal * 0.8}deg) rotateZ(${rzTotal * 0.8}deg) scale(1.02)` , offset: 0.8},
-            { transform: `rotateX(${rxTotal}deg) rotateY(${ryTotal}deg) rotateZ(${rzTotal}deg) scale(1)` },
-        ], {
-            duration: throwDuration,
-            easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
-            fill: 'forwards',
-        });
-        activeAnimations.push(tumbleAnim);
+        const throwTraj = container.animate([
+            { transform: 'translateY(0) translateX(0) scale(1) rotate(0deg)', filter: 'blur(0px)', offset: 0 },
+            { transform: `translateY(-70px) translateX(${driftX*0.4}px) scale(1.15) rotate(${totalSpin*0.3}deg)`, filter: 'blur(1.5px)', offset: 0.3 },
+            { transform: `translateY(-85px) translateX(${driftX*0.6}px) scale(1.12) rotate(${totalSpin*0.55}deg)`, filter: 'blur(1px)', offset: 0.5 },
+            { transform: `translateY(-50px) translateX(${driftX*0.85}px) scale(1.06) rotate(${totalSpin*0.8}deg)`, filter: 'blur(0.5px)', offset: 0.75 },
+            { transform: `translateY(0) translateX(${driftX}px) scale(1) rotate(${totalSpin}deg)`, filter: 'blur(0px)', offset: 1 },
+        ], { duration: throwMs, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', fill: 'forwards' });
+        activeAnimations.push(throwTraj);
 
-        // Shadow scales with "height"
-        const shadowThrowAnim = shadow.animate([
-            { transform: 'scaleX(1) scaleY(1)', opacity: 0.7, offset: 0 },
-            { transform: 'scaleX(0.5) scaleY(0.5)', opacity: 0.2, offset: 0.35 },
-            { transform: 'scaleX(0.45) scaleY(0.45)', opacity: 0.15, offset: 0.5 },
-            { transform: 'scaleX(0.6) scaleY(0.6)', opacity: 0.3, offset: 0.7 },
-            { transform: 'scaleX(1.15) scaleY(1.15)', opacity: 0.8, offset: 1.0 },
-        ], {
-            duration: throwDuration,
-            easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
-            fill: 'forwards',
-        });
-        activeAnimations.push(shadowThrowAnim);
+        const throwShadow = shadow.animate([
+            { transform: 'scaleX(1) scaleY(1)', opacity: 0.6, offset: 0 },
+            { transform: 'scaleX(0.4) scaleY(0.5)', opacity: 0.15, offset: 0.35 },
+            { transform: 'scaleX(0.35) scaleY(0.45)', opacity: 0.1, offset: 0.5 },
+            { transform: 'scaleX(0.55) scaleY(0.6)', opacity: 0.25, offset: 0.75 },
+            { transform: 'scaleX(1.2) scaleY(1.1)', opacity: 0.75, offset: 1 },
+        ], { duration: throwMs, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', fill: 'forwards' });
+        activeAnimations.push(throwShadow);
 
-        // Number cycling during throw — fast random
-        let numberInterval = setInterval(() => {
-            numEl.textContent = randInt(1, max);
-        }, 50);
+        // Fast number cycling during throw
+        startNumberCycle(numEl, max, 45);
 
-        // ─── Phase 2: First bounce ─── at throwDuration
+        // Number flickers (opacity blink) to simulate face-changing
+        const flickerAnim = numEl.animate([
+            { opacity: 1, offset: 0 },
+            { opacity: 0.3, offset: 0.08 },
+            { opacity: 1, offset: 0.12 },
+            { opacity: 0.4, offset: 0.22 },
+            { opacity: 1, offset: 0.26 },
+            { opacity: 0.3, offset: 0.38 },
+            { opacity: 1, offset: 0.42 },
+            { opacity: 0.35, offset: 0.54 },
+            { opacity: 1, offset: 0.58 },
+            { opacity: 0.4, offset: 0.72 },
+            { opacity: 1, offset: 0.76 },
+            { opacity: 1, offset: 1 },
+        ], { duration: throwMs, fill: 'forwards' });
+        activeAnimations.push(flickerAnim);
+
+        // ─── Phase 2: FIRST BOUNCE — at throwMs, 280ms ───
+        const t1 = throwMs;
+        const b1Ms = 280;
         setTimeout(() => {
             haptic('light');
-            spawnImpactDust(driftX);
+            spawnDust(driftX);
 
-            // First bounce: up 30px then back
+            startNumberCycle(numEl, max, 80); // slower cycling
+
+            const b1Spin = totalSpin + spinDir * randInt(90, 180);
             const bounce1 = container.animate([
-                { transform: `translateY(0px) translateX(${driftX}px)`, offset: 0 },
-                { transform: `translateY(-30px) translateX(${driftX + 4}px)`, offset: 0.45 },
-                { transform: `translateY(0px) translateX(${driftX + 6}px)`, offset: 1.0 },
-            ], {
-                duration: 300,
-                easing: 'cubic-bezier(0.33, 0, 0.67, 1)',
-                fill: 'forwards',
-            });
+                { transform: `translateY(0) translateX(${driftX}px) scale(1) rotate(${totalSpin}deg)`, offset: 0 },
+                { transform: `translateY(0) translateX(${driftX}px) scale(0.94, 1.06) rotate(${totalSpin}deg)`, offset: 0.06 }, // squash on impact
+                { transform: `translateY(-28px) translateX(${driftX+4}px) scale(1.05) rotate(${b1Spin*0.6}deg)`, offset: 0.4 },
+                { transform: `translateY(0) translateX(${driftX+7}px) scale(1) rotate(${b1Spin}deg)`, offset: 1 },
+            ], { duration: b1Ms, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' });
             activeAnimations.push(bounce1);
 
-            // Continue tumbling but slower
-            const rxB1 = rxTotal + rxDir * 180;
-            const ryB1 = ryTotal + ryDir * 200;
-            const rzB1 = rzTotal + rzDir * 90;
-            const tumble1 = die.animate([
-                { transform: `rotateX(${rxTotal}deg) rotateY(${ryTotal}deg) rotateZ(${rzTotal}deg) scale(1)` },
-                { transform: `rotateX(${rxB1}deg) rotateY(${ryB1}deg) rotateZ(${rzB1}deg) scale(1.03)`, offset: 0.45 },
-                { transform: `rotateX(${rxB1 + rxDir * 40}deg) rotateY(${ryB1 + ryDir * 40}deg) rotateZ(${rzB1}deg) scale(1)` },
-            ], {
-                duration: 300,
-                easing: 'cubic-bezier(0.33, 0, 0.67, 1)',
-                fill: 'forwards',
-            });
-            activeAnimations.push(tumble1);
-
-            // Shadow bounce 1
             const shB1 = shadow.animate([
-                { transform: 'scaleX(1.15) scaleY(1.15)', opacity: 0.8, offset: 0 },
-                { transform: 'scaleX(0.7) scaleY(0.7)', opacity: 0.35, offset: 0.45 },
-                { transform: 'scaleX(1.1) scaleY(1.1)', opacity: 0.75, offset: 1.0 },
-            ], {
-                duration: 300,
-                easing: 'cubic-bezier(0.33, 0, 0.67, 1)',
-                fill: 'forwards',
-            });
+                { transform: 'scaleX(1.2) scaleY(1.1)', opacity: 0.75, offset: 0 },
+                { transform: 'scaleX(1.3) scaleY(1.2)', opacity: 0.85, offset: 0.06 }, // squash = wider shadow
+                { transform: 'scaleX(0.6) scaleY(0.65)', opacity: 0.3, offset: 0.4 },
+                { transform: 'scaleX(1.15) scaleY(1.05)', opacity: 0.7, offset: 1 },
+            ], { duration: b1Ms, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' });
             activeAnimations.push(shB1);
 
-            // Slow down number cycling
-            clearInterval(numberInterval);
-            numberInterval = setInterval(() => {
-                numEl.textContent = randInt(1, max);
-            }, 90);
+            // ─── Phase 3: SECOND BOUNCE (smaller) — 220ms ───
+            const x2 = driftX + 7;
+            setTimeout(() => {
+                haptic('light');
+                spawnDust(x2);
 
-        }, throwDuration);
+                startNumberCycle(numEl, max, 140); // even slower
 
-        // ─── Phase 3: Second bounce (smaller) ─── at throwDuration + 300
-        const t2 = throwDuration + 300;
-        const finalDriftX = driftX + 6;
-        setTimeout(() => {
-            haptic('light');
+                const b2Spin = b1Spin + spinDir * randInt(45, 90);
+                const bounce2 = container.animate([
+                    { transform: `translateY(0) translateX(${x2}px) scale(1) rotate(${b1Spin}deg)`, offset: 0 },
+                    { transform: `translateY(0) translateX(${x2}px) scale(0.97, 1.03) rotate(${b1Spin}deg)`, offset: 0.08 },
+                    { transform: `translateY(-10px) translateX(${x2+2}px) scale(1.02) rotate(${b2Spin*0.6}deg)`, offset: 0.4 },
+                    { transform: `translateY(0) translateX(${x2+3}px) scale(1) rotate(${b2Spin}deg)`, offset: 1 },
+                ], { duration: 220, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' });
+                activeAnimations.push(bounce2);
 
-            const bounce2 = container.animate([
-                { transform: `translateY(0px) translateX(${finalDriftX}px)`, offset: 0 },
-                { transform: `translateY(-12px) translateX(${finalDriftX + 2}px)`, offset: 0.45 },
-                { transform: `translateY(0px) translateX(${finalDriftX + 3}px)`, offset: 1.0 },
-            ], {
-                duration: 200,
-                easing: 'cubic-bezier(0.33, 0, 0.67, 1)',
-                fill: 'forwards',
-            });
-            activeAnimations.push(bounce2);
+                const shB2 = shadow.animate([
+                    { transform: 'scaleX(1.15) scaleY(1.05)', opacity: 0.7, offset: 0 },
+                    { transform: 'scaleX(0.8) scaleY(0.85)', opacity: 0.45, offset: 0.4 },
+                    { transform: 'scaleX(1.05) scaleY(1)', opacity: 0.65, offset: 1 },
+                ], { duration: 220, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' });
+                activeAnimations.push(shB2);
 
-            // Shadow bounce 2
-            const shB2 = shadow.animate([
-                { transform: 'scaleX(1.1) scaleY(1.1)', opacity: 0.75, offset: 0 },
-                { transform: 'scaleX(0.85) scaleY(0.85)', opacity: 0.5, offset: 0.45 },
-                { transform: 'scaleX(1.05) scaleY(1.05)', opacity: 0.7, offset: 1.0 },
-            ], {
-                duration: 200,
-                easing: 'cubic-bezier(0.33, 0, 0.67, 1)',
-                fill: 'forwards',
-            });
-            activeAnimations.push(shB2);
+                // ─── Phase 4: SETTLE — 400ms ───
+                const x3 = x2 + 3;
+                const b2SpinFinal = b2Spin;
+                setTimeout(() => {
+                    stopNumberCycle();
 
-            // Even slower cycling
-            clearInterval(numberInterval);
-            numberInterval = setInterval(() => {
-                numEl.textContent = randInt(1, max);
-            }, 150);
+                    // Show 2 intermediate values then the final
+                    const settleValues = [randInt(1, max), finalRaw[0]];
+                    let si = 0;
 
-        }, t2);
+                    function settleTick() {
+                        numEl.textContent = settleValues[si];
+                        si++;
+                        if (si < settleValues.length) {
+                            setTimeout(settleTick, 140);
+                        } else {
+                            // Final wobble + reveal
+                            const wobbleSpin = b2SpinFinal + spinDir * randInt(5, 15);
+                            const settleAnim = container.animate([
+                                { transform: `translateY(0) translateX(${x3}px) rotate(${b2SpinFinal}deg) scale(1)`, offset: 0 },
+                                { transform: `translateY(0) translateX(${x3-1}px) rotate(${b2SpinFinal + spinDir*8}deg) scale(1)`, offset: 0.25 },
+                                { transform: `translateY(0) translateX(${x3+0.5}px) rotate(${wobbleSpin - spinDir*3}deg) scale(1)`, offset: 0.55 },
+                                { transform: `translateY(0) translateX(0) rotate(${wobbleSpin}deg) scale(1)`, offset: 1 },
+                            ], { duration: 350, easing: 'ease-out', fill: 'forwards' });
+                            activeAnimations.push(settleAnim);
 
-        // ─── Phase 4: Wobble settle ─── at t2 + 200
-        const t3 = t2 + 200;
-        const settleX = finalDriftX + 3;
-        setTimeout(() => {
-            clearInterval(numberInterval);
+                            const shSettle = shadow.animate([
+                                { transform: 'scaleX(1.05) scaleY(1)', opacity: 0.65 },
+                                { transform: 'scaleX(1) scaleY(1)', opacity: 0.6 },
+                            ], { duration: 350, easing: 'ease-out', fill: 'forwards' });
+                            activeAnimations.push(shSettle);
 
-            // Show near-final values with decreasing frequency
-            let wobbleCount = 0;
-            const wobbleValues = [randInt(1, max), randInt(1, max), finalRaw[0]];
-
-            function wobbleTick() {
-                if (wobbleCount >= wobbleValues.length) {
-                    // Final settle — show actual result
-                    finishRoll(finalRaw, finalTotal, max, settleX);
-                    return;
-                }
-                numEl.textContent = wobbleValues[wobbleCount];
-                wobbleCount++;
-                setTimeout(wobbleTick, 120 + wobbleCount * 80);
-            }
-
-            // Wobble rotation — small oscillating rotations settling to flat
-            const wobbleR = die.animate([
-                { transform: `rotateX(0deg) rotateY(0deg) rotateZ(${rzDir * 6}deg)` },
-                { transform: `rotateX(0deg) rotateY(0deg) rotateZ(${-rzDir * 4}deg)`, offset: 0.3 },
-                { transform: `rotateX(0deg) rotateY(0deg) rotateZ(${rzDir * 2}deg)`, offset: 0.6 },
-                { transform: `rotateX(0deg) rotateY(0deg) rotateZ(0deg)` },
-            ], {
-                duration: 500,
-                easing: 'ease-out',
-                fill: 'forwards',
-            });
-            activeAnimations.push(wobbleR);
-
-            // Shadow settles
-            const shSettle = shadow.animate([
-                { transform: 'scaleX(1.05) scaleY(1.05)', opacity: 0.7 },
-                { transform: 'scaleX(1) scaleY(1)', opacity: 0.65 },
-            ], {
-                duration: 500,
-                easing: 'ease-out',
-                fill: 'forwards',
-            });
-            activeAnimations.push(shSettle);
-
-            wobbleTick();
-        }, t3);
+                            setTimeout(() => {
+                                typeLabel.style.opacity = '';
+                                finishRoll(finalRaw, finalTotal, max);
+                            }, 300);
+                        }
+                    }
+                    numEl.textContent = settleValues[0];
+                    setTimeout(settleTick, 160);
+                }, 220);
+            }, b1Ms);
+        }, t1);
     }
 
-    function finishRoll(rawRolls, total, max, settleX) {
+    // ─── Number Cycling ───
+    function startNumberCycle(el, max, intervalMs) {
+        stopNumberCycle();
+        numberTimer = setInterval(() => { el.textContent = randInt(1, max); }, intervalMs);
+    }
+    function stopNumberCycle() {
+        if (numberTimer) { clearInterval(numberTimer); numberTimer = null; }
+    }
+
+    // ─── Result Reveal ───
+    function finishRoll(rawRolls, total, max) {
         const arena = document.getElementById('arena');
         const container = document.getElementById('dieContainer');
-        const die = document.getElementById('die');
         const numEl = document.getElementById('dieNumber');
         const panel = document.getElementById('resultPanel');
         const btnAction = document.getElementById('btnAction');
         const btnReroll = document.getElementById('btnReroll');
+        const shadow = document.getElementById('dieShadow');
 
-        // Show final number
         numEl.textContent = rawRolls[0];
 
-        // Determine critical
         const isCrit = currentDie === 'd20' && rawRolls[0] === 20;
         const isFail = currentDie === 'd20' && rawRolls[0] === 1;
 
@@ -889,83 +798,56 @@
         if (isFail) stateClass += ' crit-fail';
         arena.className = stateClass;
 
-        // Result pop — scale up then settle
+        // Pop-in effect: scale up then settle to center
         const popAnim = container.animate([
-            { transform: `translateX(${settleX}px) scale(1)` },
-            { transform: `translateX(${settleX * 0.5}px) scale(1.12)`, offset: 0.3 },
-            { transform: `translateX(0px) scale(1)` },
-        ], {
-            duration: 400,
-            easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
-            fill: 'forwards',
-        });
+            { transform: 'translateX(0) scale(1) rotate(0deg)' },
+            { transform: 'translateX(0) scale(1.15) rotate(0deg)', offset: 0.35 },
+            { transform: 'translateX(0) scale(1) rotate(0deg)' },
+        ], { duration: 350, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)', fill: 'forwards' });
         activeAnimations.push(popAnim);
 
-        // Die back to neutral rotation
-        const flatAnim = die.animate([
-            { transform: 'rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1)' },
-        ], {
-            duration: 200,
-            fill: 'forwards',
-        });
-        activeAnimations.push(flatAnim);
+        // Shadow normal
+        const shNorm = shadow.animate([
+            { transform: 'scaleX(1) scaleY(1)', opacity: 0.6 },
+        ], { duration: 200, fill: 'forwards' });
+        activeAnimations.push(shNorm);
 
-        // Haptic
         if (isCrit || isFail) {
             haptic('heavy');
-            // Screen shake for crits
+            document.body.classList.remove('screen-shake');
+            void document.body.offsetWidth; // reflow to restart
             document.body.classList.add('screen-shake');
             setTimeout(() => document.body.classList.remove('screen-shake'), 500);
-            // Impact ring
             spawnImpactRing(isCrit ? '#2ecc71' : '#e74c3c');
+            spawnParticles(isCrit ? '#2ecc71' : '#e74c3c', 40);
         } else {
             haptic('heavy');
+            spawnParticles('#d4af37', 20);
         }
 
-        // Particles
-        const particleColor = isCrit ? '#2ecc71' : isFail ? '#e74c3c' : '#d4af37';
-        spawnParticles(particleColor, isCrit || isFail ? 36 : 24);
-
-        // Result panel
         document.getElementById('resultTotal').textContent = total;
 
-        // Breakdown
         const mod = MODE === 'game' ? (GAME_FORMULA ? GAME_FORMULA.replace(/^\d*d\d+/, '') : '') : (currentMod !== 0 ? (currentMod > 0 ? '+' + currentMod : '' + currentMod) : '');
         const rollStr = rawRolls.join(' + ');
         document.getElementById('resultBreakdown').textContent =
             rawRolls.length > 1 ? `[${rollStr}]${mod} = ${total}` :
             mod ? `${rawRolls[0]}${mod} = ${total}` : '';
 
-        // Result label
         const labelEl = document.getElementById('resultLabel');
-        if (isCrit) {
-            labelEl.textContent = 'ACERTO CRITICO!';
-            labelEl.className = 'result-label critical';
-        } else if (isFail) {
-            labelEl.textContent = 'FALHA CRITICA!';
-            labelEl.className = 'result-label crit-fail';
-        } else if (MODE === 'game' && GAME_DC !== null) {
-            if (total >= GAME_DC) {
-                labelEl.textContent = 'SUCESSO!';
-                labelEl.className = 'result-label success';
-            } else {
-                labelEl.textContent = 'FALHA';
-                labelEl.className = 'result-label failure';
-            }
-        } else {
-            labelEl.textContent = '';
-            labelEl.className = 'result-label';
-        }
+        if (isCrit) { labelEl.textContent = 'ACERTO CRITICO!'; labelEl.className = 'result-label critical'; }
+        else if (isFail) { labelEl.textContent = 'FALHA CRITICA!'; labelEl.className = 'result-label crit-fail'; }
+        else if (MODE === 'game' && GAME_DC !== null) {
+            if (total >= GAME_DC) { labelEl.textContent = 'SUCESSO!'; labelEl.className = 'result-label success'; }
+            else { labelEl.textContent = 'FALHA'; labelEl.className = 'result-label failure'; }
+        } else { labelEl.textContent = ''; labelEl.className = 'result-label'; }
 
         panel.classList.add('visible');
 
-        // History (free mode)
         if (MODE !== 'game') {
             rollHistory.unshift({ die: currentDie, raw: rawRolls[0], total, isCrit, isFail });
             renderHistory();
         }
 
-        // Buttons
         isRolling = false;
         if (MODE === 'game') {
             btnAction.textContent = 'Confirmar';
@@ -977,128 +859,98 @@
         }
     }
 
-    // ─── Impact Effects ───
+    // ─── Effects ───
 
-    function spawnImpactDust(offsetX) {
-        const container = document.getElementById('particles');
-        const cx = container.offsetWidth / 2 + offsetX;
-        const cy = container.offsetHeight / 2 + 80; // Below die center
-
-        for (let i = 0; i < 8; i++) {
+    function spawnDust(offsetX) {
+        const c = document.getElementById('particles');
+        const cx = c.offsetWidth / 2 + (offsetX || 0);
+        const cy = c.offsetHeight / 2 + 85;
+        for (let i = 0; i < 6; i++) {
             const p = document.createElement('div');
             p.className = 'particle';
-            p.style.background = 'rgba(200, 200, 200, 0.4)';
-            p.style.width = (3 + Math.random() * 3) + 'px';
-            p.style.height = p.style.width;
-            p.style.left = cx + 'px';
-            p.style.top = cy + 'px';
-
-            const angle = Math.PI + (Math.random() - 0.5) * Math.PI; // Spread downward
-            const dist = 20 + Math.random() * 40;
-            const dx = Math.cos(angle) * dist;
-            const dy = Math.sin(angle) * dist * 0.4; // Flatten vertically
-            const duration = 300 + Math.random() * 200;
-
+            p.style.background = 'rgba(180,170,150,0.5)';
+            const s = 2 + Math.random() * 3;
+            p.style.width = s+'px'; p.style.height = s+'px';
+            p.style.left = cx+'px'; p.style.top = cy+'px';
+            const angle = Math.PI + (Math.random()-0.5)*2.2;
+            const dist = 15 + Math.random()*30;
+            const dx = Math.cos(angle)*dist, dy = Math.sin(angle)*dist*0.35;
+            const dur = 250 + Math.random()*200;
             p.animate([
-                { opacity: 0.6, transform: 'translate(0, 0) scale(1)' },
-                { opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(0.3)` }
-            ], { duration, easing: 'ease-out' });
-
-            container.appendChild(p);
-            setTimeout(() => p.remove(), duration);
+                { opacity: 0.5, transform: 'translate(0,0) scale(1)' },
+                { opacity: 0, transform: `translate(${dx}px,${dy}px) scale(0.2)` }
+            ], { duration: dur, easing: 'ease-out' });
+            c.appendChild(p);
+            setTimeout(() => p.remove(), dur);
         }
     }
 
     function spawnImpactRing(color) {
-        const container = document.getElementById('particles');
-        const cx = container.offsetWidth / 2;
-        const cy = container.offsetHeight / 2;
-
+        const c = document.getElementById('particles');
+        const cx = c.offsetWidth/2, cy = c.offsetHeight/2;
         const ring = document.createElement('div');
         ring.className = 'impact-ring';
         ring.style.borderColor = color;
-        ring.style.left = cx + 'px';
-        ring.style.top = cy + 'px';
-
+        ring.style.left = cx+'px'; ring.style.top = cy+'px';
         ring.animate([
-            { width: '0px', height: '0px', marginLeft: '0px', marginTop: '0px', opacity: 0.8, borderWidth: '3px' },
-            { width: '200px', height: '200px', marginLeft: '-100px', marginTop: '-100px', opacity: 0, borderWidth: '1px' },
-        ], {
-            duration: 600,
-            easing: 'ease-out',
-        });
-
-        container.appendChild(ring);
-        setTimeout(() => ring.remove(), 600);
+            { width:'0', height:'0', marginLeft:'0', marginTop:'0', opacity:0.8, borderWidth:'3px' },
+            { width:'220px', height:'220px', marginLeft:'-110px', marginTop:'-110px', opacity:0, borderWidth:'1px' },
+        ], { duration: 550, easing: 'ease-out' });
+        c.appendChild(ring);
+        setTimeout(() => ring.remove(), 550);
     }
 
-    // ─── Particles ───
     function spawnParticles(color, count) {
-        const container = document.getElementById('particles');
-        const cx = container.offsetWidth / 2;
-        const cy = container.offsetHeight / 2;
-
+        const c = document.getElementById('particles');
+        const cx = c.offsetWidth/2, cy = c.offsetHeight/2;
         for (let i = 0; i < count; i++) {
             const p = document.createElement('div');
             p.className = 'particle';
             p.style.background = color;
-            const size = 3 + Math.random() * 4;
-            p.style.width = size + 'px';
-            p.style.height = size + 'px';
-            p.style.left = cx + 'px';
-            p.style.top = cy + 'px';
-
-            const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
-            const dist = 60 + Math.random() * 120;
-            const dx = Math.cos(angle) * dist;
-            const dy = Math.sin(angle) * dist;
-            const duration = 500 + Math.random() * 500;
-
-            // Some particles sparkle (flash bright then fade)
-            const sparkle = Math.random() > 0.6;
-            const midOpacity = sparkle ? 1 : 0.7;
-
+            const s = 2 + Math.random()*5;
+            p.style.width = s+'px'; p.style.height = s+'px';
+            p.style.left = cx+'px'; p.style.top = cy+'px';
+            const angle = (Math.PI*2*i)/count + (Math.random()-0.5)*0.6;
+            const dist = 50 + Math.random()*130;
+            const dx = Math.cos(angle)*dist, dy = Math.sin(angle)*dist;
+            const dur = 450 + Math.random()*550;
+            const sparkle = Math.random() > 0.65;
             p.animate([
-                { opacity: 0.9, transform: 'translate(0, 0) scale(1)' },
-                { opacity: midOpacity, transform: `translate(${dx * 0.5}px, ${dy * 0.5}px) scale(${sparkle ? 1.5 : 1})`, offset: 0.3 },
-                { opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(0)` }
-            ], { duration, easing: 'cubic-bezier(0, 0.4, 0.5, 1)' });
-
-            container.appendChild(p);
-            setTimeout(() => p.remove(), duration);
+                { opacity: 0.9, transform: 'translate(0,0) scale(1)' },
+                { opacity: sparkle?1:0.6, transform: `translate(${dx*0.4}px,${dy*0.4}px) scale(${sparkle?1.6:1})`, offset: 0.25 },
+                { opacity: 0, transform: `translate(${dx}px,${dy}px) scale(0)` }
+            ], { duration: dur, easing: 'cubic-bezier(0,0.3,0.5,1)' });
+            c.appendChild(p);
+            setTimeout(() => p.remove(), dur);
         }
     }
 
-    // ─── Haptic Helper ───
-    function haptic(style) {
-        if (tg && tg.HapticFeedback) {
-            tg.HapticFeedback.impactOccurred(style);
-        }
+    // ─── Helpers ───
+
+    function stopAnimations() {
+        activeAnimations.forEach(a => { try { a.cancel(); } catch(e) {} });
+        activeAnimations = [];
+        stopNumberCycle();
     }
 
     function confirmGameRoll() {
         if (tg) {
-            const data = JSON.stringify({
-                action: 'roll_complete',
-                result: GAME_RESULT,
-                formula: GAME_FORMULA,
-                token: GAME_TOKEN,
-                type: GAME_TYPE
-            });
-            tg.sendData(data);
+            tg.sendData(JSON.stringify({
+                action: 'roll_complete', result: GAME_RESULT,
+                formula: GAME_FORMULA, token: GAME_TOKEN, type: GAME_TYPE
+            }));
         }
     }
 
     function resetRoll() {
         isRolling = false;
-        activeAnimations.forEach(a => a.cancel());
-        activeAnimations = [];
+        stopAnimations();
 
         const arena = document.getElementById('arena');
         const container = document.getElementById('dieContainer');
-        const die = document.getElementById('die');
         const shadow = document.getElementById('dieShadow');
         const numEl = document.getElementById('dieNumber');
+        const typeLabel = document.getElementById('dieTypeLabel');
         const panel = document.getElementById('resultPanel');
         const btnAction = document.getElementById('btnAction');
         const btnReroll = document.getElementById('btnReroll');
@@ -1106,9 +958,11 @@
 
         arena.className = 'arena state-idle';
         container.style.transform = '';
-        die.style.transform = '';
+        container.style.filter = '';
         shadow.style.transform = '';
         shadow.style.opacity = '';
+        typeLabel.style.opacity = '';
+        numEl.style.opacity = '';
         numEl.textContent = randInt(1, dieMax(currentDie));
         panel.classList.remove('visible');
         tapHint.style.display = '';
@@ -1119,19 +973,14 @@
         btnReroll.style.display = 'none';
     }
 
-    // ─── History ───
     function renderHistory() {
         const el = document.getElementById('history');
         el.innerHTML = rollHistory.slice(0, 10).map(h => {
             const cls = h.isCrit ? 'h-crit' : h.isFail ? 'h-fail' : 'h-result';
-            return `<div class="history-item">
-                <span>${h.die}${currentMod ? (currentMod > 0 ? '+' + currentMod : currentMod) : ''}</span>
-                <span class="${cls}">${h.total}</span>
-            </div>`;
+            return `<div class="history-item"><span>${h.die}${currentMod ? (currentMod>0?'+'+currentMod:currentMod) : ''}</span><span class="${cls}">${h.total}</span></div>`;
         }).join('');
     }
 
-    // ─── Start ───
     init();
     </script>
 </body>
