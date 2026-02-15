@@ -557,97 +557,148 @@
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     function buildD10() {
-        // Pentagonal trapezohedron — proportions matching real-world d10 dice
-        // (gem/diamond shape with wide equatorial belt and readable faces).
-        const R = 1.05;  // equatorial radius (wide)
-        const H = 0.95;  // pole height
-        const h = 0.42;  // ring height (wide equatorial belt ≈ 44% of total height)
+        // Proven d10 geometry (Natarov/byWulf approach):
+        // 10 equatorial vertices in zigzag pattern + 2 poles, all normalized
+        // to unit sphere then scaled. This produces the correct gem/diamond shape.
+        const scale = 1.15;
+        const step = Math.PI * 2 / 10; // 36° between equatorial verts
+        const hOff = 0.105;             // zigzag height ≈ tan(6°)
 
-        // 12 vertices: 2 poles + upper ring (5) + lower ring (5, offset 36°)
-        const verts = [];
-        verts.push(new THREE.Vector3(0, H, 0));   // 0 = top pole
-        verts.push(new THREE.Vector3(0, -H, 0));  // 1 = bottom pole
-        for (let i = 0; i < 5; i++) {
-            const a = (i / 5) * Math.PI * 2;
-            verts.push(new THREE.Vector3(Math.cos(a) * R, h, Math.sin(a) * R));
+        // 12 raw vertices: 10 equatorial (zigzag) + 2 poles
+        const rawVerts = [];
+        for (let i = 0; i < 10; i++) {
+            const angle = i * step;
+            rawVerts.push(new THREE.Vector3(
+                Math.cos(angle),
+                Math.sin(angle),
+                hOff * (i % 2 ? 1 : -1)
+            ).normalize().multiplyScalar(scale));
         }
-        for (let i = 0; i < 5; i++) {
-            const a = (i / 5) * Math.PI * 2 + Math.PI / 5;
-            verts.push(new THREE.Vector3(Math.cos(a) * R, -h, Math.sin(a) * R));
+        rawVerts.push(new THREE.Vector3(0, 0, -1).multiplyScalar(scale)); // 10: bottom pole
+        rawVerts.push(new THREE.Vector3(0, 0,  1).multiplyScalar(scale)); // 11: top pole
+
+        // 10 kite faces (from proven Natarov face table):
+        // Each entry: [equatA, equatB, pole, numberShown]
+        // Odd numbers connect to bottom pole (10), even to top pole (11)
+        const kiteFaces = [
+            [5, 7, 11, 0], [4, 2, 10, 1], [1, 3, 11, 2], [0, 8, 10, 3],
+            [7, 9, 11, 4], [8, 6, 10, 5], [9, 1, 11, 6], [2, 0, 10, 7],
+            [3, 5, 11, 8], [6, 4, 10, 9],
+        ];
+
+        // 10 equatorial infill triangles (thin strips between kite faces)
+        const equatTris = [
+            [1,0,2],[1,2,3],[3,2,4],[3,4,5],[5,4,6],
+            [5,6,7],[7,6,8],[7,8,9],[9,8,0],[9,0,1],
+        ];
+
+        // Build geometry
+        const positions = [], uvArr = [], normArr = [];
+        const groups = [];
+        let offset = 0;
+
+        // UV for kite faces: use the Natarov circular-polygon UV approach
+        // For a kite (4-vertex quad fan-triangulated into 2 tris),
+        // af = π*6/5 (angular offset for upright numbers)
+        const af = Math.PI * 6 / 5;
+        const kiteVerts = 4; // quad
+        const kiteAngleStep = Math.PI * 2 / kiteVerts;
+
+        // Helper: compute UV for vertex index j in a regular polygon
+        function polyUV(j) {
+            const angle = kiteAngleStep * j + af;
+            return [(Math.cos(angle) + 1) / 2, (Math.sin(angle) + 1) / 2];
         }
 
-        // 10 kite faces, each = 2 triangles (6 verts)
-        // Top kite i: (topPole, topRing[i], botRing[i], topRing[i+1])
-        // Bottom kite i: (botPole, topRing[i+1], botRing[i], botRing[i+1])
-        const positions = [];
-        for (let i = 0; i < 5; i++) {
-            const t0 = 2 + i, t1 = 2 + (i + 1) % 5, b0 = 7 + i;
-            for (const vi of [0, t0, b0, 0, b0, t1]) {
-                const v = verts[vi]; positions.push(v.x, v.y, v.z);
+        // Kite face UVs (fan from vertex 0): tri0=(v0,v1,v2), tri1=(v0,v2,v3)
+        const kUV0 = polyUV(0), kUV1 = polyUV(1), kUV2 = polyUV(2), kUV3 = polyUV(3);
+
+        const faceNormals = [];
+        const faceNumbers = [];
+
+        kiteFaces.forEach((face, fi) => {
+            const [a, b, pole, num] = face;
+            // Quad vertices in fan order: a, b, pole — but Natarov defines
+            // quads as [eqA, eqB, pole] which fan-triangulates to:
+            // The kite quad is actually [eqA, next_eq_between, eqB, pole]
+            // For the proven approach, each kite = 2 triangles sharing the pole:
+            // tri0 = (eqA, eqB, pole) — this IS the whole visible kite triangle.
+            // But a kite has 4 vertices. Let me look at it differently:
+            // Natarov's face [5,7,11] is actually a QUAD defined by vertices 5,7,11
+            // that gets fan-triangulated as: (5,7,11) — only 3 unique verts = 1 triangle.
+            //
+            // The KITE shape comes from the quad being [eqA, midEq, eqB, pole]:
+            // For face [5,7,11]: vertices 5,6,7,11 form the kite (6 is between 5 and 7).
+            // But Natarov only lists [5,7,11] because vertex 6 is implied by the
+            // equatorial strip triangle [5,6,7].
+            //
+            // For our rendering: each kite = 1 large triangle (eqA, eqB, pole)
+            // + 1 equatorial infill triangle. Together they form the kite visually.
+            // So each numbered face is actually just ONE triangle.
+
+            const va = rawVerts[a], vb = rawVerts[b], vc = rawVerts[pole];
+
+            positions.push(va.x, va.y, va.z, vb.x, vb.y, vb.z, vc.x, vc.y, vc.z);
+
+            // Face normal
+            const e1 = new THREE.Vector3().subVectors(vb, va);
+            const e2 = new THREE.Vector3().subVectors(vc, va);
+            const n = new THREE.Vector3().crossVectors(e1, e2).normalize();
+            // Ensure outward
+            const center = new THREE.Vector3().addVectors(va, vb).add(vc).divideScalar(3);
+            if (n.dot(center) < 0) n.negate();
+            normArr.push(n.x, n.y, n.z, n.x, n.y, n.z, n.x, n.y, n.z);
+
+            // UVs: triangle inscribed in circle, rotated by af for upright numbers
+            // 3-vertex polygon: equilateral triangle UVs
+            const triAngle = Math.PI * 2 / 3;
+            for (let j = 0; j < 3; j++) {
+                const ang = triAngle * j + af;
+                uvArr.push((Math.cos(ang) + 1) / 2, (Math.sin(ang) + 1) / 2);
             }
-        }
-        for (let i = 0; i < 5; i++) {
-            const t1 = 2 + (i + 1) % 5, b0 = 7 + i, b1 = 7 + (i + 1) % 5;
-            for (const vi of [1, t1, b0, 1, b1, t1]) {
-                const v = verts[vi]; positions.push(v.x, v.y, v.z);
-            }
-        }
+
+            // Material group: this face gets material index = fi (for number)
+            groups.push({ start: offset, count: 3, materialIndex: fi });
+            offset += 3;
+
+            faceNormals.push(n);
+            faceNumbers.push(num);
+        });
+
+        // Equatorial infill triangles (blank dark faces, no number)
+        equatTris.forEach(tri => {
+            const [a, b, c] = tri;
+            const va = rawVerts[a], vb = rawVerts[b], vc = rawVerts[c];
+            positions.push(va.x, va.y, va.z, vb.x, vb.y, vb.z, vc.x, vc.y, vc.z);
+
+            const e1 = new THREE.Vector3().subVectors(vb, va);
+            const e2 = new THREE.Vector3().subVectors(vc, va);
+            const n = new THREE.Vector3().crossVectors(e1, e2).normalize();
+            const center = new THREE.Vector3().addVectors(va, vb).add(vc).divideScalar(3);
+            if (n.dot(center) < 0) n.negate();
+            normArr.push(n.x, n.y, n.z, n.x, n.y, n.z, n.x, n.y, n.z);
+
+            uvArr.push(0, 0, 1, 0, 0.5, 1); // doesn't matter, blank face
+            groups.push({ start: offset, count: 3, materialIndex: 10 }); // blank material
+            offset += 3;
+        });
 
         const geo = new THREE.BufferGeometry();
         geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-        geo.computeVertexNormals();
+        geo.setAttribute('normal', new THREE.Float32BufferAttribute(normArr, 3));
+        geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvArr, 2));
+        groups.forEach(g => geo.addGroup(g.start, g.count, g.materialIndex));
 
-        const faceCount = 10, vpf = 6;
-        geo.clearGroups();
-        for (let i = 0; i < faceCount; i++) geo.addGroup(i * vpf, vpf, i);
+        // Materials: 10 numbered + 1 blank for equatorial strips
+        const mats = faceNumbers.map(n => makeFaceMaterial(n, 'kite', 0.8));
+        // Add blank material for equatorial infill (index 10)
+        mats.push(new THREE.MeshStandardMaterial({
+            color: FACE_COLOR, metalness: 0.15, roughness: 0.55, side: THREE.DoubleSide
+        }));
 
-        // Manual kite UV mapping — each kite maps to a diamond in texture space
-        // with the number centered at UV (0.5, 0.5).
-        const uvs = new Float32Array(faceCount * vpf * 2);
-        const uP = [0.50, 0.10]; // pole vertex (top of kite)
-        const uL = [0.08, 0.52]; // left side
-        const uO = [0.50, 0.92]; // opposite vertex (bottom of kite)
-        const uR = [0.92, 0.52]; // right side
-
-        // Top kites: verts = [pole, sideL, opposite, pole, opposite, sideR]
-        for (let f = 0; f < 5; f++) {
-            const b = f * vpf * 2;
-            uvs[b]=uP[0]; uvs[b+1]=uP[1]; uvs[b+2]=uL[0]; uvs[b+3]=uL[1]; uvs[b+4]=uO[0]; uvs[b+5]=uO[1];
-            uvs[b+6]=uP[0]; uvs[b+7]=uP[1]; uvs[b+8]=uO[0]; uvs[b+9]=uO[1]; uvs[b+10]=uR[0]; uvs[b+11]=uR[1];
-        }
-        // Bottom kites: verts = [pole, opposite, sideL, pole, sideR, opposite]
-        for (let f = 0; f < 5; f++) {
-            const b = (5 + f) * vpf * 2;
-            uvs[b]=uP[0]; uvs[b+1]=uP[1]; uvs[b+2]=uO[0]; uvs[b+3]=uO[1]; uvs[b+4]=uL[0]; uvs[b+5]=uL[1];
-            uvs[b+6]=uP[0]; uvs[b+7]=uP[1]; uvs[b+8]=uR[0]; uvs[b+9]=uR[1]; uvs[b+10]=uO[0]; uvs[b+11]=uO[1];
-        }
-        geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-
-        // Face normals (ensure outward-pointing)
-        const posAttr = geo.attributes.position;
-        const normals = [];
-        for (let i = 0; i < faceCount; i++) {
-            const base = i * vpf;
-            const a = new THREE.Vector3().fromBufferAttribute(posAttr, base);
-            const b2 = new THREE.Vector3().fromBufferAttribute(posAttr, base + 1);
-            const c = new THREE.Vector3().fromBufferAttribute(posAttr, base + 2);
-            const n = new THREE.Vector3().crossVectors(
-                new THREE.Vector3().subVectors(b2, a),
-                new THREE.Vector3().subVectors(c, a)
-            ).normalize();
-            const center = new THREE.Vector3();
-            for (let j = 0; j < vpf; j++) center.add(new THREE.Vector3().fromBufferAttribute(posAttr, base + j));
-            center.divideScalar(vpf);
-            if (n.dot(center) < 0) n.negate();
-            normals.push(n);
-        }
-
-        const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-        const mats = numbers.map(n => makeFaceMaterial(n, 'kite', 0.75));
         const mesh = new THREE.Mesh(geo, mats);
-        // Higher edge threshold (28°) hides internal kite diagonals
-        addEdges(mesh, geo, 28);
-        mesh.userData = { type: 'd10', numbers, normals };
+        addEdges(mesh, geo, 20);
+        mesh.userData = { type: 'd10', numbers: faceNumbers, normals: faceNormals };
         return mesh;
     }
 
