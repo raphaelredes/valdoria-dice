@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mesa de Dados - Lendas de Valdoria</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --bg2: #16213e;
+            --gold: #d4af37;
+            --gold-light: #f5d97e;
+            --red: #e74c3c;
+            --green: #2ecc71;
+            --text: #e0e0e0;
+            --text-dim: #8899aa;
+            --glow: rgba(212, 175, 55, 0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            width: 100%;
+            padding: 12px 16px;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg2), transparent);
+        }
+        .header h1 {
+            font-size: 16px;
+            color: var(--gold);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .header .label {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+        .header .formula-display {
+            font-size: 14px;
+            color: var(--gold-light);
+            font-family: 'Courier New', monospace;
+            margin-top: 4px;
+        }
+
+        /* --- DICE ARENA --- */
+        .arena {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            position: relative;
+            padding: 20px;
+        }
+
+        /* Particle container */
+        .particles {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--gold);
+            opacity: 0;
+        }
+
+        /* Die container */
+        .die-container {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            perspective: 600px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .die {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+        }
+
+        /* Die shapes */
+        .die-face {
+            width: 140px;
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* D20 - Icosahedron outline */
+        .die-face.d20 {
+            clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+            background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
+            border: none;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
+        }
+        .die-face.d20::before {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+            background: linear-gradient(135deg, #3a3a5a, #2a2a4a);
+        }
+
+        /* D12 - Pentagon-ish */
+        .die-face.d12 {
+            clip-path: polygon(50% 0%, 95% 35%, 80% 90%, 20% 90%, 5% 35%);
+            background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
+        }
+        .die-face.d12::before {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            clip-path: polygon(50% 0%, 95% 35%, 80% 90%, 20% 90%, 5% 35%);
+            background: linear-gradient(135deg, #3a3a5a, #2a2a4a);
+        }
+
+        /* D10 - Diamond */
+        .die-face.d10 {
+            clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 20% 100%, 0% 40%);
+            background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
+        }
+        .die-face.d10::before {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            clip-path: polygon(50% 0%, 100% 40%, 80% 100%, 20% 100%, 0% 40%);
+            background: linear-gradient(135deg, #3a3a5a, #2a2a4a);
+        }
+
+        /* D8 - Diamond */
+        .die-face.d8 {
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
+        }
+        .die-face.d8::before {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            background: linear-gradient(135deg, #3a3a5a, #2a2a4a);
+        }
+
+        /* D6 - Square with rounded corners */
+        .die-face.d6 {
+            border-radius: 16px;
+            background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
+            border: 2px solid #3a3a5a;
+        }
+
+        /* D4 - Triangle */
+        .die-face.d4 {
+            clip-path: polygon(50% 5%, 97% 95%, 3% 95%);
+            background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
+        }
+        .die-face.d4::before {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            clip-path: polygon(50% 5%, 97% 95%, 3% 95%);
+            background: linear-gradient(135deg, #3a3a5a, #2a2a4a);
+        }
+
+        /* Number display */
+        .die-number {
+            position: relative;
+            z-index: 2;
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--gold);
+            text-shadow: 0 0 20px var(--glow), 0 2px 4px rgba(0,0,0,0.5);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .die-type-label {
+            position: absolute;
+            bottom: -8px;
+            right: -8px;
+            font-size: 14px;
+            color: var(--text-dim);
+            font-weight: 700;
+            background: var(--bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            z-index: 3;
+        }
+
+        /* --- STATES --- */
+
+        /* Idle / Tap to Roll */
+        .state-idle .die-container {
+            animation: idle-pulse 2s ease-in-out infinite;
+        }
+        .tap-hint {
+            margin-top: 24px;
+            font-size: 15px;
+            color: var(--text-dim);
+            animation: fade-pulse 2s ease-in-out infinite;
+        }
+        @keyframes idle-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        @keyframes fade-pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Rolling */
+        .state-rolling .die-container {
+            animation: roll-shake 0.12s linear infinite;
+        }
+        .state-rolling .die-number {
+            animation: number-cycle 0.08s step-end infinite;
+        }
+        @keyframes roll-shake {
+            0% { transform: translate(0, 0) rotate(0deg) scale(1.05); }
+            25% { transform: translate(-4px, 2px) rotate(-5deg) scale(1.08); }
+            50% { transform: translate(3px, -3px) rotate(4deg) scale(1.05); }
+            75% { transform: translate(-2px, 4px) rotate(-3deg) scale(1.08); }
+            100% { transform: translate(4px, -2px) rotate(5deg) scale(1.05); }
+        }
+
+        /* Slowing down */
+        .state-slowing .die-container {
+            animation: roll-slow 0.3s ease-out infinite;
+        }
+        @keyframes roll-slow {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-1px, 1px) rotate(-1deg); }
+            100% { transform: translate(1px, -1px) rotate(1deg); }
+        }
+
+        /* Result reveal */
+        .state-result .die-container {
+            animation: result-bounce 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+        }
+        .state-result .die-number {
+            animation: result-glow 1.5s ease-in-out infinite;
+        }
+        .state-result .die-face {
+            box-shadow: 0 0 40px var(--glow), 0 0 80px rgba(212, 175, 55, 0.15);
+        }
+        @keyframes result-bounce {
+            0% { transform: scale(1.1); }
+            30% { transform: scale(0.95); }
+            60% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        @keyframes result-glow {
+            0%, 100% { text-shadow: 0 0 20px var(--glow), 0 2px 4px rgba(0,0,0,0.5); }
+            50% { text-shadow: 0 0 40px var(--gold), 0 0 60px var(--glow), 0 2px 4px rgba(0,0,0,0.5); }
+        }
+
+        /* Critical styling */
+        .state-result.critical .die-number {
+            color: var(--green);
+            font-size: 56px;
+            text-shadow: 0 0 30px rgba(46, 204, 113, 0.6), 0 0 60px rgba(46, 204, 113, 0.3);
+        }
+        .state-result.critical .die-face {
+            box-shadow: 0 0 40px rgba(46, 204, 113, 0.4), 0 0 80px rgba(46, 204, 113, 0.15);
+        }
+        .state-result.crit-fail .die-number {
+            color: var(--red);
+            font-size: 56px;
+            text-shadow: 0 0 30px rgba(231, 76, 60, 0.6), 0 0 60px rgba(231, 76, 60, 0.3);
+        }
+        .state-result.crit-fail .die-face {
+            box-shadow: 0 0 40px rgba(231, 76, 60, 0.4), 0 0 80px rgba(231, 76, 60, 0.15);
+        }
+
+        /* --- RESULT PANEL --- */
+        .result-panel {
+            width: 100%;
+            padding: 16px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        .result-panel.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .result-total {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--gold);
+        }
+        .result-breakdown {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-top: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .result-label {
+            font-size: 16px;
+            font-weight: 700;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .result-label.success { color: var(--green); }
+        .result-label.failure { color: var(--red); }
+        .result-label.critical { color: var(--green); font-size: 20px; }
+        .result-label.crit-fail { color: var(--red); font-size: 20px; }
+
+        /* --- BOTTOM BAR --- */
+        .bottom-bar {
+            width: 100%;
+            padding: 12px 16px 24px;
+            display: flex;
+            gap: 8px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s ease, opacity 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn:active { transform: scale(0.96); }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold), #c4a032);
+            color: #1a1a2e;
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.08);
+            color: var(--text);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* --- DICE SELECTOR (for free-roll mode) --- */
+        .dice-selector {
+            display: flex;
+            gap: 8px;
+            padding: 8px 16px;
+            overflow-x: auto;
+            width: 100%;
+            justify-content: center;
+        }
+        .dice-chip {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            background: rgba(255,255,255,0.06);
+            color: var(--text-dim);
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .dice-chip.active {
+            background: rgba(212, 175, 55, 0.15);
+            color: var(--gold);
+            border-color: var(--gold);
+        }
+        .dice-chip:active { transform: scale(0.95); }
+
+        /* --- MODIFIER INPUT --- */
+        .mod-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .mod-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.06);
+            color: var(--text);
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .mod-btn:active { background: rgba(255,255,255,0.12); }
+        .mod-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gold);
+            min-width: 40px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* --- HISTORY --- */
+        .history {
+            width: 100%;
+            padding: 0 16px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 12px;
+            color: var(--text-dim);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .history-item .h-result { color: var(--gold); font-weight: 700; }
+        .history-item .h-crit { color: var(--green); }
+        .history-item .h-fail { color: var(--red); }
+
+        /* Hidden in game mode */
+        .game-mode .dice-selector,
+        .game-mode .mod-row,
+        .game-mode .history { display: none; }
+        .game-mode .btn-secondary { display: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 id="headerTitle">Mesa de Dados</h1>
+        <div class="label" id="headerLabel"></div>
+        <div class="formula-display" id="headerFormula"></div>
+    </div>
+
+    <!-- Dice type selector (free-roll mode only) -->
+    <div class="dice-selector" id="diceSelector">
+        <div class="dice-chip active" data-die="d4">d4</div>
+        <div class="dice-chip" data-die="d6">d6</div>
+        <div class="dice-chip" data-die="d8">d8</div>
+        <div class="dice-chip" data-die="d10">d10</div>
+        <div class="dice-chip" data-die="d12">d12</div>
+        <div class="dice-chip" data-die="d20">d20</div>
+    </div>
+
+    <!-- Modifier controls (free-roll mode only) -->
+    <div class="mod-row" id="modRow">
+        <span style="font-size:13px;color:var(--text-dim)">Modificador:</span>
+        <button class="mod-btn" onclick="changeMod(-1)">-</button>
+        <span class="mod-value" id="modValue">+0</span>
+        <button class="mod-btn" onclick="changeMod(1)">+</button>
+    </div>
+
+    <div class="arena state-idle" id="arena">
+        <div class="particles" id="particles"></div>
+
+        <div class="die-container" id="dieContainer" onclick="onDieTap()">
+            <div class="die">
+                <div class="die-face d20" id="dieFace">
+                    <span class="die-number" id="dieNumber">20</span>
+                </div>
+                <span class="die-type-label" id="dieTypeLabel">d20</span>
+            </div>
+        </div>
+
+        <div class="tap-hint" id="tapHint">Toque para rolar</div>
+    </div>
+
+    <div class="result-panel" id="resultPanel">
+        <div class="result-total" id="resultTotal"></div>
+        <div class="result-breakdown" id="resultBreakdown"></div>
+        <div class="result-label" id="resultLabel"></div>
+    </div>
+
+    <div class="history" id="history"></div>
+
+    <div class="bottom-bar" id="bottomBar">
+        <button class="btn btn-primary" id="btnAction" onclick="onDieTap()">Rolar Dados</button>
+        <button class="btn btn-secondary" id="btnReroll" onclick="resetRoll()" style="display:none">Rolar Novamente</button>
+    </div>
+
+    <script>
+    // ─── Telegram WebApp ───
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg) {
+        tg.ready();
+        tg.expand();
+        // Match Telegram theme
+        const bgColor = tg.themeParams.bg_color || '#1a1a2e';
+        document.body.style.background = bgColor;
+    }
+
+    // ─── URL Parameters ───
+    const params = new URLSearchParams(window.location.search);
+    const MODE = params.get('mode') || 'free'; // 'game' or 'free'
+    const GAME_FORMULA = params.get('formula');  // e.g. "1d20+3"
+    const GAME_RESULT = params.get('r') ? parseInt(atob(params.get('r'))) : null; // pre-rolled result (base64)
+    const GAME_RAW = params.get('raw') ? JSON.parse(atob(params.get('raw'))) : null; // raw rolls
+    const GAME_LABEL = params.get('label') ? decodeURIComponent(params.get('label')) : '';
+    const GAME_TYPE = params.get('type') || ''; // attack, skill, damage, save
+    const GAME_DC = params.get('dc') ? parseInt(params.get('dc')) : null;
+    const GAME_TOKEN = params.get('token') || '';
+
+    // ─── State ───
+    let currentDie = 'd20';
+    let currentMod = 0;
+    let isRolling = false;
+    let rollHistory = [];
+
+    // ─── Init ───
+    function init() {
+        if (MODE === 'game') {
+            document.body.classList.add('game-mode');
+            if (GAME_LABEL) {
+                document.getElementById('headerLabel').textContent = GAME_LABEL;
+            }
+            if (GAME_FORMULA) {
+                document.getElementById('headerFormula').textContent = GAME_FORMULA;
+                // Parse die type from formula
+                const dieMatch = GAME_FORMULA.match(/d(\d+)/);
+                if (dieMatch) currentDie = 'd' + dieMatch[1];
+            }
+            // Set title based on type
+            const titles = {
+                'attack': 'Ataque',
+                'skill': 'Teste de Habilidade',
+                'damage': 'Dano',
+                'save': 'Salvaguarda',
+                'initiative': 'Iniciativa',
+                'death_save': 'Salvaguarda contra Morte'
+            };
+            if (titles[GAME_TYPE]) {
+                document.getElementById('headerTitle').textContent = titles[GAME_TYPE];
+            }
+        }
+
+        // Set die face shape
+        setDieShape(currentDie);
+
+        // Dice selector clicks
+        document.querySelectorAll('.dice-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                if (isRolling) return;
+                document.querySelectorAll('.dice-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                currentDie = chip.dataset.die;
+                setDieShape(currentDie);
+                resetRoll();
+            });
+        });
+
+        // Show initial random number
+        const max = dieMax(currentDie);
+        document.getElementById('dieNumber').textContent = randInt(1, max);
+    }
+
+    function dieMax(die) {
+        return parseInt(die.replace('d', ''));
+    }
+
+    function randInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function setDieShape(die) {
+        const face = document.getElementById('dieFace');
+        face.className = 'die-face ' + die;
+        document.getElementById('dieTypeLabel').textContent = die;
+    }
+
+    function changeMod(delta) {
+        if (isRolling) return;
+        currentMod = Math.max(-10, Math.min(20, currentMod + delta));
+        const modStr = currentMod >= 0 ? '+' + currentMod : '' + currentMod;
+        document.getElementById('modValue').textContent = modStr;
+    }
+
+    // ─── Roll Logic ───
+    function onDieTap() {
+        if (isRolling) return;
+        isRolling = true;
+
+        const arena = document.getElementById('arena');
+        const tapHint = document.getElementById('tapHint');
+        const btnAction = document.getElementById('btnAction');
+        const btnReroll = document.getElementById('btnReroll');
+
+        tapHint.style.display = 'none';
+        btnAction.disabled = true;
+        document.getElementById('resultPanel').classList.remove('visible');
+
+        // Determine result
+        const max = dieMax(currentDie);
+        let finalRaw, finalTotal;
+
+        if (MODE === 'game' && GAME_RESULT !== null) {
+            finalTotal = GAME_RESULT;
+            if (GAME_RAW) {
+                finalRaw = GAME_RAW;
+            } else {
+                // Infer raw from total - modifier
+                const modMatch = GAME_FORMULA ? GAME_FORMULA.match(/[+-]\d+$/) : null;
+                const mod = modMatch ? parseInt(modMatch[0]) : 0;
+                finalRaw = [Math.max(1, Math.min(max, finalTotal - mod))];
+            }
+        } else {
+            // Free roll — client-side random
+            finalRaw = [randInt(1, max)];
+            finalTotal = finalRaw[0] + currentMod;
+        }
+
+        // Start rolling animation
+        arena.className = 'arena state-rolling';
+
+        const numEl = document.getElementById('dieNumber');
+        let cycleCount = 0;
+        const totalCycles = 20 + randInt(5, 15); // ~25-35 cycles
+        const baseDuration = 60; // ms per cycle start
+
+        function cycle() {
+            if (cycleCount >= totalCycles) {
+                showResult(finalRaw, finalTotal, max);
+                return;
+            }
+
+            // Show random number
+            numEl.textContent = randInt(1, max);
+            cycleCount++;
+
+            // Slow down progressively
+            const progress = cycleCount / totalCycles;
+            let delay;
+            if (progress < 0.5) {
+                delay = baseDuration;
+            } else if (progress < 0.8) {
+                arena.className = 'arena state-slowing';
+                delay = baseDuration + (progress - 0.5) * 400;
+            } else {
+                delay = baseDuration + (progress - 0.5) * 800;
+            }
+
+            setTimeout(cycle, delay);
+        }
+
+        // Haptic feedback
+        if (tg && tg.HapticFeedback) {
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        setTimeout(cycle, 100);
+    }
+
+    function showResult(rawRolls, total, max) {
+        const arena = document.getElementById('arena');
+        const numEl = document.getElementById('dieNumber');
+        const panel = document.getElementById('resultPanel');
+        const btnAction = document.getElementById('btnAction');
+        const btnReroll = document.getElementById('btnReroll');
+
+        // Display raw value on the die face
+        numEl.textContent = rawRolls[0];
+
+        // Determine critical
+        const isCrit = currentDie === 'd20' && rawRolls[0] === 20;
+        const isFail = currentDie === 'd20' && rawRolls[0] === 1;
+
+        let stateClass = 'arena state-result';
+        if (isCrit) stateClass += ' critical';
+        if (isFail) stateClass += ' crit-fail';
+        arena.className = stateClass;
+
+        // Haptic
+        if (tg && tg.HapticFeedback) {
+            if (isCrit) tg.HapticFeedback.notificationOccurred('success');
+            else if (isFail) tg.HapticFeedback.notificationOccurred('error');
+            else tg.HapticFeedback.impactOccurred('heavy');
+        }
+
+        // Particles
+        spawnParticles(isCrit ? '#2ecc71' : isFail ? '#e74c3c' : '#d4af37');
+
+        // Result panel
+        document.getElementById('resultTotal').textContent = total;
+
+        // Breakdown
+        const mod = MODE === 'game' ? (GAME_FORMULA ? GAME_FORMULA.replace(/^\d*d\d+/, '') : '') : (currentMod !== 0 ? (currentMod > 0 ? '+' + currentMod : '' + currentMod) : '');
+        const rollStr = rawRolls.join(' + ');
+        document.getElementById('resultBreakdown').textContent =
+            rawRolls.length > 1 ? `[${rollStr}]${mod} = ${total}` :
+            mod ? `${rawRolls[0]}${mod} = ${total}` : '';
+
+        // Result label
+        const labelEl = document.getElementById('resultLabel');
+        if (isCrit) {
+            labelEl.textContent = 'ACERTO CRITICO!';
+            labelEl.className = 'result-label critical';
+        } else if (isFail) {
+            labelEl.textContent = 'FALHA CRITICA!';
+            labelEl.className = 'result-label crit-fail';
+        } else if (MODE === 'game' && GAME_DC !== null) {
+            if (total >= GAME_DC) {
+                labelEl.textContent = 'SUCESSO!';
+                labelEl.className = 'result-label success';
+            } else {
+                labelEl.textContent = 'FALHA';
+                labelEl.className = 'result-label failure';
+            }
+        } else {
+            labelEl.textContent = '';
+            labelEl.className = 'result-label';
+        }
+
+        panel.classList.add('visible');
+
+        // History (free mode)
+        if (MODE !== 'game') {
+            rollHistory.unshift({ die: currentDie, raw: rawRolls[0], total, isCrit, isFail });
+            renderHistory();
+        }
+
+        // Buttons
+        isRolling = false;
+        if (MODE === 'game') {
+            btnAction.textContent = 'Confirmar';
+            btnAction.disabled = false;
+            btnAction.onclick = confirmGameRoll;
+        } else {
+            btnAction.style.display = 'none';
+            btnReroll.style.display = '';
+        }
+    }
+
+    function confirmGameRoll() {
+        // Send data back to bot
+        if (tg) {
+            const data = JSON.stringify({
+                action: 'roll_complete',
+                result: GAME_RESULT,
+                formula: GAME_FORMULA,
+                token: GAME_TOKEN,
+                type: GAME_TYPE
+            });
+            tg.sendData(data);
+        }
+    }
+
+    function resetRoll() {
+        isRolling = false;
+        const arena = document.getElementById('arena');
+        const numEl = document.getElementById('dieNumber');
+        const panel = document.getElementById('resultPanel');
+        const btnAction = document.getElementById('btnAction');
+        const btnReroll = document.getElementById('btnReroll');
+        const tapHint = document.getElementById('tapHint');
+
+        arena.className = 'arena state-idle';
+        numEl.textContent = randInt(1, dieMax(currentDie));
+        panel.classList.remove('visible');
+        tapHint.style.display = '';
+        btnAction.textContent = 'Rolar Dados';
+        btnAction.disabled = false;
+        btnAction.onclick = onDieTap;
+        btnAction.style.display = '';
+        btnReroll.style.display = 'none';
+    }
+
+    // ─── Particles ───
+    function spawnParticles(color) {
+        const container = document.getElementById('particles');
+        const cx = container.offsetWidth / 2;
+        const cy = container.offsetHeight / 2;
+
+        for (let i = 0; i < 24; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.background = color;
+            p.style.left = cx + 'px';
+            p.style.top = cy + 'px';
+
+            const angle = (Math.PI * 2 * i) / 24 + (Math.random() - 0.5) * 0.5;
+            const dist = 80 + Math.random() * 100;
+            const dx = Math.cos(angle) * dist;
+            const dy = Math.sin(angle) * dist;
+            const duration = 600 + Math.random() * 400;
+
+            p.animate([
+                { opacity: 1, transform: 'translate(0, 0) scale(1)' },
+                { opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(0)` }
+            ], { duration, easing: 'cubic-bezier(0, 0.5, 0.5, 1)' });
+
+            container.appendChild(p);
+            setTimeout(() => p.remove(), duration);
+        }
+    }
+
+    // ─── History ───
+    function renderHistory() {
+        const el = document.getElementById('history');
+        el.innerHTML = rollHistory.slice(0, 10).map(h => {
+            const cls = h.isCrit ? 'h-crit' : h.isFail ? 'h-fail' : 'h-result';
+            return `<div class="history-item">
+                <span>${h.die}${currentMod ? (currentMod > 0 ? '+' + currentMod : currentMod) : ''}</span>
+                <span class="${cls}">${h.total}</span>
+            </div>`;
+        }).join('');
+    }
+
+    // ─── Start ───
+    init();
+    </script>
+</body>
+</html>
