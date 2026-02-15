@@ -221,14 +221,6 @@
     //  LENDAS DE VALDORIA — THREE.JS 3D DICE
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    // Debug: show any JS errors on screen
-    window.onerror = function(msg, url, line) {
-        const d = document.createElement('div');
-        d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#e74c3c;color:#fff;padding:8px 12px;z-index:9999;font:12px monospace;white-space:pre-wrap;';
-        d.textContent = 'ERR: ' + msg + ' (L' + line + ')';
-        document.body.prepend(d);
-    };
-
     const tg = window.Telegram && window.Telegram.WebApp;
     if (tg) { tg.ready(); tg.expand(); document.body.style.background = tg.themeParams.bg_color || '#1a1a2e'; }
 
@@ -1044,28 +1036,7 @@
             });
         });
 
-        // Debug: test basic rendering with a red box first
-        const _testGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-        const _testMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-        const _testMesh = new THREE.Mesh(_testGeo, _testMat);
-        _testMesh.position.set(2, 0, 0);
-        scene.add(_testMesh);
-
-        try {
-            createDieMesh(currentDie);
-            // Debug info
-            const info = document.getElementById('dieBadge');
-            if (dieMesh) {
-                const vc = dieMesh.geometry.attributes.position.count;
-                info.textContent = currentDie + ' [v:' + vc + ' sc:' + scene.children.length + ']';
-            } else {
-                info.textContent = currentDie + ' [MESH NULL]';
-            }
-        } catch(e) {
-            const info = document.getElementById('dieBadge');
-            info.textContent = 'BUILD ERR: ' + e.message;
-            info.style.color = '#e74c3c';
-        }
+        createDieMesh(currentDie);
 
         animate(performance.now());
     }
