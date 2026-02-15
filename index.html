@@ -376,27 +376,131 @@
         mesh.add(line);
     }
 
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //  PER-FACE UV MAPPING (critical for numbers)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Three.js polyhedron UVs use spherical projection — useless for per-face textures.
+    // This function projects each face's vertices into a local 2D plane and maps to [0,1].
+
+    function computePerFaceUVs(geo, vertsPerFace) {
+        const pos = geo.attributes.position;
+        const totalVerts = pos.count;
+        const faceCount = totalVerts / vertsPerFace;
+        const uvs = new Float32Array(totalVerts * 2);
+
+        for (let f = 0; f < faceCount; f++) {
+            const base = f * vertsPerFace;
+
+            // Collect vertices + compute center
+            const verts = [];
+            const center = new THREE.Vector3();
+            for (let j = 0; j < vertsPerFace; j++) {
+                const v = new THREE.Vector3().fromBufferAttribute(pos, base + j);
+                verts.push(v);
+                center.add(v);
+            }
+            center.divideScalar(vertsPerFace);
+
+            // Face normal from first triangle
+            const ab = new THREE.Vector3().subVectors(verts[1], verts[0]);
+            const ac = new THREE.Vector3().subVectors(verts[2], verts[0]);
+            const normal = new THREE.Vector3().crossVectors(ab, ac).normalize();
+
+            // Tangent: from center toward first vertex, projected onto face plane
+            const tangent = new THREE.Vector3().subVectors(verts[0], center);
+            tangent.sub(normal.clone().multiplyScalar(tangent.dot(normal)));
+            tangent.normalize();
+
+            // Bitangent
+            const bitangent = new THREE.Vector3().crossVectors(normal, tangent).normalize();
+
+            // Project all vertices to 2D face-local coords
+            const proj = verts.map(v => {
+                const d = new THREE.Vector3().subVectors(v, center);
+                return { u: d.dot(tangent), v: d.dot(bitangent) };
+            });
+
+            // Find bounding box
+            let minU = Infinity, maxU = -Infinity, minV = Infinity, maxV = -Infinity;
+            for (const p of proj) {
+                minU = Math.min(minU, p.u); maxU = Math.max(maxU, p.u);
+                minV = Math.min(minV, p.v); maxV = Math.max(maxV, p.v);
+            }
+            const rangeU = maxU - minU || 1;
+            const rangeV = maxV - minV || 1;
+            const range = Math.max(rangeU, rangeV);
+
+            // Map to [0.05, 0.95] with uniform scale, centered
+            const padding = 0.05;
+            const scale = (1 - 2 * padding) / range;
+            const centerU = (minU + maxU) / 2;
+            const centerV = (minV + maxV) / 2;
+
+            for (let j = 0; j < vertsPerFace; j++) {
+                uvs[(base + j) * 2]     = 0.5 + (proj[j].u - centerU) * scale;
+                uvs[(base + j) * 2 + 1] = 0.5 + (proj[j].v - centerV) * scale;
+            }
+        }
+
+        geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //  Helper: build any polyhedron with UVs
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    function buildPolyhedron(geo, faceCount, vertsPerFace, numbers, shapeHint) {
+        const nonIndexed = geo.toNonIndexed();
+
+        // Assign material groups
+        nonIndexed.clearGroups();
+        for (let i = 0; i < faceCount; i++) {
+            nonIndexed.addGroup(i * vertsPerFace, vertsPerFace, i);
+        }
+
+        // Compute per-face UVs (replaces broken spherical UVs)
+        computePerFaceUVs(nonIndexed, vertsPerFace);
+
+        // Compute face normals for landing orientation
+        const pos = nonIndexed.attributes.position;
+        const normals = [];
+        for (let i = 0; i < faceCount; i++) {
+            const base = i * vertsPerFace;
+            const a = new THREE.Vector3().fromBufferAttribute(pos, base);
+            const b = new THREE.Vector3().fromBufferAttribute(pos, base + 1);
+            const c = new THREE.Vector3().fromBufferAttribute(pos, base + 2);
+            const ab = new THREE.Vector3().subVectors(b, a);
+            const ac = new THREE.Vector3().subVectors(c, a);
+            normals.push(new THREE.Vector3().crossVectors(ab, ac).normalize());
+        }
+
+        // Materials — one per face
+        const mats = numbers.map((n, i) => {
+            let hint = shapeHint;
+            if (hint === 'tri-auto') hint = normals[i].y > 0 ? 'tri-up' : 'tri-down';
+            return makeFaceMaterial(n, hint);
+        });
+
+        const mesh = new THREE.Mesh(nonIndexed, mats);
+        addEdges(mesh, nonIndexed);
+        mesh.userData = { type: null, numbers, normals };
+        return mesh;
+    }
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━
-    //  D6 — CUBE (simplest)
+    //  D6 — CUBE
     // ━━━━━━━━━━━━━━━━━━━━━━━━
 
-    // Standard d6: opposite faces sum to 7 → 1/6, 2/5, 3/4
-    // Face order in BoxGeometry: +X(right), -X(left), +Y(top), -Y(bottom), +Z(front), -Z(back)
     const D6_NUMBERS = [3, 4, 1, 6, 2, 5]; // +X, -X, +Y, -Y, +Z, -Z
-
-    // Normals for each face (for landing orientation)
     const D6_NORMALS = [
-        new THREE.Vector3(1, 0, 0),   // +X face → number 3
-        new THREE.Vector3(-1, 0, 0),  // -X face → number 4
-        new THREE.Vector3(0, 1, 0),   // +Y face → number 1
-        new THREE.Vector3(0, -1, 0),  // -Y face → number 6
-        new THREE.Vector3(0, 0, 1),   // +Z face → number 2
-        new THREE.Vector3(0, 0, -1),  // -Z face → number 5
+        new THREE.Vector3(1, 0, 0), new THREE.Vector3(-1, 0, 0),
+        new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, -1, 0),
+        new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, -1),
     ];
 
     function buildD6() {
-        const s = 1.2;
-        const geo = new THREE.BoxGeometry(s, s, s);
+        // BoxGeometry already has correct per-face UVs
+        const geo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
         const mats = D6_NUMBERS.map(n => makeFaceMaterial(n, 'square'));
         const mesh = new THREE.Mesh(geo, mats);
         addEdges(mesh, geo);
@@ -410,35 +514,9 @@
 
     function buildD4() {
         const geo = new THREE.TetrahedronGeometry(1.0);
-        const nonIndexed = geo.toNonIndexed();
-        const faceCount = 4;
-        const vertPerFace = 3;
-
-        // Assign groups
-        nonIndexed.clearGroups();
-        for (let i = 0; i < faceCount; i++) {
-            nonIndexed.addGroup(i * vertPerFace, vertPerFace, i);
-        }
-
-        // Compute face normals for landing
-        const pos = nonIndexed.attributes.position;
-        const normals = [];
         const numbers = [1, 2, 3, 4];
-
-        for (let i = 0; i < faceCount; i++) {
-            const a = new THREE.Vector3().fromBufferAttribute(pos, i*3);
-            const b = new THREE.Vector3().fromBufferAttribute(pos, i*3+1);
-            const c = new THREE.Vector3().fromBufferAttribute(pos, i*3+2);
-            const ab = new THREE.Vector3().subVectors(b, a);
-            const ac = new THREE.Vector3().subVectors(c, a);
-            const n = new THREE.Vector3().crossVectors(ab, ac).normalize();
-            normals.push(n);
-        }
-
-        const mats = numbers.map(n => makeFaceMaterial(n, 'tri-up'));
-        const mesh = new THREE.Mesh(nonIndexed, mats);
-        addEdges(mesh, nonIndexed);
-        mesh.userData = { type: 'd4', numbers, normals };
+        const mesh = buildPolyhedron(geo, 4, 3, numbers, 'tri-auto');
+        mesh.userData.type = 'd4';
         return mesh;
     }
 
@@ -448,36 +526,9 @@
 
     function buildD8() {
         const geo = new THREE.OctahedronGeometry(1.0);
-        const nonIndexed = geo.toNonIndexed();
-        const faceCount = 8;
-        const vertPerFace = 3;
-
-        nonIndexed.clearGroups();
-        for (let i = 0; i < faceCount; i++) {
-            nonIndexed.addGroup(i * vertPerFace, vertPerFace, i);
-        }
-
-        const pos = nonIndexed.attributes.position;
-        const normals = [];
         const numbers = [1, 2, 3, 4, 5, 6, 7, 8];
-
-        for (let i = 0; i < faceCount; i++) {
-            const a = new THREE.Vector3().fromBufferAttribute(pos, i*3);
-            const b = new THREE.Vector3().fromBufferAttribute(pos, i*3+1);
-            const c = new THREE.Vector3().fromBufferAttribute(pos, i*3+2);
-            const ab = new THREE.Vector3().subVectors(b, a);
-            const ac = new THREE.Vector3().subVectors(c, a);
-            const n = new THREE.Vector3().crossVectors(ab, ac).normalize();
-            normals.push(n);
-        }
-
-        const mats = numbers.map((n, i) => {
-            const isUp = normals[i].y > 0;
-            return makeFaceMaterial(n, isUp ? 'tri-up' : 'tri-down');
-        });
-        const mesh = new THREE.Mesh(nonIndexed, mats);
-        addEdges(mesh, nonIndexed);
-        mesh.userData = { type: 'd8', numbers, normals };
+        const mesh = buildPolyhedron(geo, 8, 3, numbers, 'tri-auto');
+        mesh.userData.type = 'd8';
         return mesh;
     }
 
@@ -487,37 +538,10 @@
 
     function buildD20() {
         const geo = new THREE.IcosahedronGeometry(1.0);
-        const nonIndexed = geo.toNonIndexed();
-        const faceCount = 20;
-        const vertPerFace = 3;
-
-        nonIndexed.clearGroups();
-        for (let i = 0; i < faceCount; i++) {
-            nonIndexed.addGroup(i * vertPerFace, vertPerFace, i);
-        }
-
-        const pos = nonIndexed.attributes.position;
-        const normals = [];
         const numbers = [];
         for (let i = 1; i <= 20; i++) numbers.push(i);
-
-        for (let i = 0; i < faceCount; i++) {
-            const a = new THREE.Vector3().fromBufferAttribute(pos, i*3);
-            const b = new THREE.Vector3().fromBufferAttribute(pos, i*3+1);
-            const c = new THREE.Vector3().fromBufferAttribute(pos, i*3+2);
-            const ab = new THREE.Vector3().subVectors(b, a);
-            const ac = new THREE.Vector3().subVectors(c, a);
-            const n = new THREE.Vector3().crossVectors(ab, ac).normalize();
-            normals.push(n);
-        }
-
-        const mats = numbers.map((n, i) => {
-            const isUp = normals[i].y > 0;
-            return makeFaceMaterial(n, isUp ? 'tri-up' : 'tri-down');
-        });
-        const mesh = new THREE.Mesh(nonIndexed, mats);
-        addEdges(mesh, nonIndexed);
-        mesh.userData = { type: 'd20', numbers, normals };
+        const mesh = buildPolyhedron(geo, 20, 3, numbers, 'tri-auto');
+        mesh.userData.type = 'd20';
         return mesh;
     }
 
@@ -527,39 +551,11 @@
 
     function buildD12() {
         const geo = new THREE.DodecahedronGeometry(1.0);
-        const nonIndexed = geo.toNonIndexed();
-
-        // DodecahedronGeometry triangulates each pentagon into 3 triangles = 36 triangles total
-        // We need to group them: every 3 consecutive triangles = 1 pentagonal face
-        const triCount = 36;
-        const faceCount = 12;
-
-        nonIndexed.clearGroups();
-        for (let i = 0; i < faceCount; i++) {
-            nonIndexed.addGroup(i * 9, 9, i); // 3 tris × 3 verts = 9 vertices per face
-        }
-
-        const pos = nonIndexed.attributes.position;
-        const normals = [];
+        // Each pentagon = 3 triangles = 9 vertices per face
         const numbers = [];
         for (let i = 1; i <= 12; i++) numbers.push(i);
-
-        for (let i = 0; i < faceCount; i++) {
-            // Get normal from first triangle of this face
-            const base = i * 9;
-            const a = new THREE.Vector3().fromBufferAttribute(pos, base);
-            const b = new THREE.Vector3().fromBufferAttribute(pos, base+1);
-            const c = new THREE.Vector3().fromBufferAttribute(pos, base+2);
-            const ab = new THREE.Vector3().subVectors(b, a);
-            const ac = new THREE.Vector3().subVectors(c, a);
-            const n = new THREE.Vector3().crossVectors(ab, ac).normalize();
-            normals.push(n);
-        }
-
-        const mats = numbers.map(n => makeFaceMaterial(n, 'penta'));
-        const mesh = new THREE.Mesh(nonIndexed, mats);
-        addEdges(mesh, nonIndexed);
-        mesh.userData = { type: 'd12', numbers, normals };
+        const mesh = buildPolyhedron(geo, 12, 9, numbers, 'penta');
+        mesh.userData.type = 'd12';
         return mesh;
     }
 
@@ -568,51 +564,38 @@
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     function buildD10() {
-        // Pentagonal trapezohedron: 10 kite-shaped faces
         // 12 vertices: 2 poles + 2 rings of 5
         const vertices = [];
         const poleY = 1.1;
         vertices.push(new THREE.Vector3(0, poleY, 0));   // 0 = top pole
         vertices.push(new THREE.Vector3(0, -poleY, 0));  // 1 = bottom pole
 
-        // Top ring (slightly above center, rotated)
         const r = 0.95;
         const topY = 0.35, botY = -0.35;
         for (let i = 0; i < 5; i++) {
             const angle = (i / 5) * Math.PI * 2;
-            vertices.push(new THREE.Vector3(Math.cos(angle) * r, topY, Math.sin(angle) * r)); // 2-6
+            vertices.push(new THREE.Vector3(Math.cos(angle) * r, topY, Math.sin(angle) * r));
         }
-        // Bottom ring (offset by 36 degrees)
         for (let i = 0; i < 5; i++) {
             const angle = (i / 5) * Math.PI * 2 + Math.PI / 5;
-            vertices.push(new THREE.Vector3(Math.cos(angle) * r, botY, Math.sin(angle) * r)); // 7-11
+            vertices.push(new THREE.Vector3(Math.cos(angle) * r, botY, Math.sin(angle) * r));
         }
 
-        // 10 kite faces: 5 upper + 5 lower
-        // Each kite = 2 triangles
-        const faces = [];
-
-        // Upper kites: top_pole, top[i], bot[i], top[i+1]
+        // 10 kite faces, each = 2 triangles = 6 verts
+        const tris = [];
         for (let i = 0; i < 5; i++) {
-            const t0 = 2 + i;
-            const t1 = 2 + ((i + 1) % 5);
-            const b0 = 7 + i;
-            // Kite: pole, t0, b0, t1 → 2 triangles
-            faces.push([0, t0, b0]);   // upper-left triangle
-            faces.push([0, b0, t1]);   // upper-right triangle
+            const t0 = 2 + i, t1 = 2 + ((i + 1) % 5), b0 = 7 + i;
+            tris.push([0, t0, b0]);
+            tris.push([0, b0, t1]);
         }
-        // Lower kites: bot_pole, bot[i], top[i+1], bot[i+1]
         for (let i = 0; i < 5; i++) {
-            const b0 = 7 + i;
-            const b1 = 7 + ((i + 1) % 5);
-            const t1 = 2 + ((i + 1) % 5);
-            faces.push([1, t1, b0]);
-            faces.push([1, b1, t1]);
+            const b0 = 7 + i, b1 = 7 + ((i + 1) % 5), t1 = 2 + ((i + 1) % 5);
+            tris.push([1, t1, b0]);
+            tris.push([1, b1, t1]);
         }
 
-        // Build buffer geometry
         const positions = [];
-        for (const tri of faces) {
+        for (const tri of tris) {
             for (const vi of tri) {
                 const v = vertices[vi];
                 positions.push(v.x, v.y, v.z);
@@ -623,27 +606,28 @@
         geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
         geo.computeVertexNormals();
 
-        // Group: every 2 triangles (6 verts) = 1 kite face
         const faceCount = 10;
+        const vertsPerFace = 6;
         geo.clearGroups();
         for (let i = 0; i < faceCount; i++) {
-            geo.addGroup(i * 6, 6, i);
+            geo.addGroup(i * vertsPerFace, vertsPerFace, i);
         }
 
-        // Compute normals for landing
-        const normals = [];
-        const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; // d10: 0-9
-        const posAttr = geo.attributes.position;
+        // Per-face UVs
+        computePerFaceUVs(geo, vertsPerFace);
 
+        // Face normals
+        const normals = [];
+        const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        const posAttr = geo.attributes.position;
         for (let i = 0; i < faceCount; i++) {
-            const base = i * 6;
+            const base = i * vertsPerFace;
             const a = new THREE.Vector3().fromBufferAttribute(posAttr, base);
-            const b = new THREE.Vector3().fromBufferAttribute(posAttr, base+1);
-            const c = new THREE.Vector3().fromBufferAttribute(posAttr, base+2);
+            const b = new THREE.Vector3().fromBufferAttribute(posAttr, base + 1);
+            const c = new THREE.Vector3().fromBufferAttribute(posAttr, base + 2);
             const ab = new THREE.Vector3().subVectors(b, a);
             const ac = new THREE.Vector3().subVectors(c, a);
-            const n = new THREE.Vector3().crossVectors(ab, ac).normalize();
-            normals.push(n);
+            normals.push(new THREE.Vector3().crossVectors(ab, ac).normalize());
         }
 
         const mats = numbers.map(n => makeFaceMaterial(n, 'kite'));
