@@ -367,8 +367,8 @@
     }
 
     // ─── EDGE WIREFRAME ───
-    function addEdges(mesh, geo) {
-        const edges = new THREE.EdgesGeometry(geo, 15);
+    function addEdges(mesh, geo, threshold) {
+        const edges = new THREE.EdgesGeometry(geo, threshold !== undefined ? threshold : 15);
         const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: EDGE_COLOR, transparent: true, opacity: 0.35 }));
         mesh.add(line);
     }
@@ -557,12 +557,11 @@
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     function buildD10() {
-        // Pentagonal trapezohedron with mathematically correct proportions.
-        // For planar kite faces: h/H = (1 - cos36) / (1 + cos36)
-        const cos36 = (1 + Math.sqrt(5)) / 4; // cos(36°) ≈ 0.80902
-        const R = 0.95;
-        const H = 1.25;
-        const h = H * (1 - cos36) / (1 + cos36); // ≈ 0.132
+        // Pentagonal trapezohedron — proportions matching real-world d10 dice
+        // (gem/diamond shape with wide equatorial belt and readable faces).
+        const R = 1.05;  // equatorial radius (wide)
+        const H = 0.95;  // pole height
+        const h = 0.42;  // ring height (wide equatorial belt ≈ 44% of total height)
 
         // 12 vertices: 2 poles + upper ring (5) + lower ring (5, offset 36°)
         const verts = [];
@@ -570,20 +569,17 @@
         verts.push(new THREE.Vector3(0, -H, 0));  // 1 = bottom pole
         for (let i = 0; i < 5; i++) {
             const a = (i / 5) * Math.PI * 2;
-            verts.push(new THREE.Vector3(Math.cos(a) * R, h, Math.sin(a) * R)); // 2-6
+            verts.push(new THREE.Vector3(Math.cos(a) * R, h, Math.sin(a) * R));
         }
         for (let i = 0; i < 5; i++) {
             const a = (i / 5) * Math.PI * 2 + Math.PI / 5;
-            verts.push(new THREE.Vector3(Math.cos(a) * R, -h, Math.sin(a) * R)); // 7-11
+            verts.push(new THREE.Vector3(Math.cos(a) * R, -h, Math.sin(a) * R));
         }
 
         // 10 kite faces, each = 2 triangles (6 verts)
-        // Top kite i: vertices (topPole, topRing[i], botRing[i], topRing[i+1])
-        //   Split: tri1=[pole, topRing[i], botRing[i]], tri2=[pole, botRing[i], topRing[i+1]]
-        // Bottom kite i: vertices (botPole, topRing[i+1], botRing[i], botRing[i+1])
-        //   Split: tri1=[pole, topRing[i+1], botRing[i]], tri2=[pole, botRing[i+1], topRing[i+1]]
+        // Top kite i: (topPole, topRing[i], botRing[i], topRing[i+1])
+        // Bottom kite i: (botPole, topRing[i+1], botRing[i], botRing[i+1])
         const positions = [];
-
         for (let i = 0; i < 5; i++) {
             const t0 = 2 + i, t1 = 2 + (i + 1) % 5, b0 = 7 + i;
             for (const vi of [0, t0, b0, 0, b0, t1]) {
@@ -605,16 +601,13 @@
         geo.clearGroups();
         for (let i = 0; i < faceCount; i++) geo.addGroup(i * vpf, vpf, i);
 
-        // Manual kite UV mapping — bypass generic computePerFaceUVs which
-        // breaks on kite faces (duplicate vertices skew centroid calculation).
-        // Kite UV: pole at top (0.5, 0.12), opposite at bottom (0.5, 0.90),
-        // sides at left (0.10, 0.55) and right (0.90, 0.55).
-        // Number texture center (0.5, 0.5) maps to kite centroid.
+        // Manual kite UV mapping — each kite maps to a diamond in texture space
+        // with the number centered at UV (0.5, 0.5).
         const uvs = new Float32Array(faceCount * vpf * 2);
-        const uP = [0.50, 0.12]; // pole
-        const uL = [0.10, 0.55]; // side left
-        const uO = [0.50, 0.90]; // opposite
-        const uR = [0.90, 0.55]; // side right
+        const uP = [0.50, 0.10]; // pole vertex (top of kite)
+        const uL = [0.08, 0.52]; // left side
+        const uO = [0.50, 0.92]; // opposite vertex (bottom of kite)
+        const uR = [0.92, 0.52]; // right side
 
         // Top kites: verts = [pole, sideL, opposite, pole, opposite, sideR]
         for (let f = 0; f < 5; f++) {
@@ -642,7 +635,6 @@
                 new THREE.Vector3().subVectors(b2, a),
                 new THREE.Vector3().subVectors(c, a)
             ).normalize();
-            // Flip if pointing inward (away from face centroid direction)
             const center = new THREE.Vector3();
             for (let j = 0; j < vpf; j++) center.add(new THREE.Vector3().fromBufferAttribute(posAttr, base + j));
             center.divideScalar(vpf);
@@ -651,9 +643,10 @@
         }
 
         const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-        const mats = numbers.map(n => makeFaceMaterial(n, 'kite', 0.65));
+        const mats = numbers.map(n => makeFaceMaterial(n, 'kite', 0.75));
         const mesh = new THREE.Mesh(geo, mats);
-        addEdges(mesh, geo);
+        // Higher edge threshold (28°) hides internal kite diagonals
+        addEdges(mesh, geo, 28);
         mesh.userData = { type: 'd10', numbers, normals };
         return mesh;
     }
