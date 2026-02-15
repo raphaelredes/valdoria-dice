@@ -314,8 +314,9 @@
     }
 
     // ─── Number texture helper ───
-    function makeNumberTexture(num, shape, size) {
+    function makeNumberTexture(num, shape, size, fontScale) {
         size = size || 256;
+        fontScale = fontScale || 1.0;
         const c = document.createElement('canvas');
         c.width = size; c.height = size;
         const ctx = c.getContext('2d');
@@ -333,7 +334,7 @@
 
         // Number — always centered at (0.5, 0.5) which maps to face centroid via UV
         const text = String(num);
-        const fontSize = text.length > 1 ? size * 0.32 : size * 0.42;
+        const fontSize = (text.length > 1 ? size * 0.32 : size * 0.42) * fontScale;
         ctx.font = `bold ${fontSize}px "Segoe UI", Arial, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -356,9 +357,9 @@
         return tex;
     }
 
-    function makeFaceMaterial(num, shape) {
+    function makeFaceMaterial(num, shape, fontScale) {
         return new THREE.MeshStandardMaterial({
-            map: makeNumberTexture(num, shape),
+            map: makeNumberTexture(num, shape, undefined, fontScale),
             metalness: 0.15,
             roughness: 0.55,
             side: THREE.DoubleSide,
@@ -441,7 +442,7 @@
     //  Helper: build any polyhedron with UVs
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    function buildPolyhedron(geo, faceCount, vertsPerFace, numbers, shapeHint) {
+    function buildPolyhedron(geo, faceCount, vertsPerFace, numbers, shapeHint, fontScale) {
         const nonIndexed = geo.toNonIndexed();
 
         // Assign material groups
@@ -470,7 +471,7 @@
         const mats = numbers.map((n, i) => {
             let hint = shapeHint;
             if (hint === 'tri-auto') hint = normals[i].y > 0 ? 'tri-up' : 'tri-down';
-            return makeFaceMaterial(n, hint);
+            return makeFaceMaterial(n, hint, fontScale);
         });
 
         const mesh = new THREE.Mesh(nonIndexed, mats);
@@ -507,7 +508,7 @@
     function buildD4() {
         const geo = new THREE.TetrahedronGeometry(1.0);
         const numbers = [1, 2, 3, 4];
-        const mesh = buildPolyhedron(geo, 4, 3, numbers, 'tri-auto');
+        const mesh = buildPolyhedron(geo, 4, 3, numbers, 'tri-auto', 0.65);
         mesh.userData.type = 'd4';
         return mesh;
     }
@@ -556,41 +557,43 @@
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     function buildD10() {
-        // 12 vertices: 2 poles + 2 rings of 5
-        const vertices = [];
-        const poleY = 1.1;
-        vertices.push(new THREE.Vector3(0, poleY, 0));   // 0 = top pole
-        vertices.push(new THREE.Vector3(0, -poleY, 0));  // 1 = bottom pole
+        // Pentagonal trapezohedron with mathematically correct proportions.
+        // For planar kite faces: h/H = (1 - cos36) / (1 + cos36)
+        const cos36 = (1 + Math.sqrt(5)) / 4; // cos(36°) ≈ 0.80902
+        const R = 0.95;
+        const H = 1.25;
+        const h = H * (1 - cos36) / (1 + cos36); // ≈ 0.132
 
-        const r = 0.95;
-        const topY = 0.35, botY = -0.35;
+        // 12 vertices: 2 poles + upper ring (5) + lower ring (5, offset 36°)
+        const verts = [];
+        verts.push(new THREE.Vector3(0, H, 0));   // 0 = top pole
+        verts.push(new THREE.Vector3(0, -H, 0));  // 1 = bottom pole
         for (let i = 0; i < 5; i++) {
-            const angle = (i / 5) * Math.PI * 2;
-            vertices.push(new THREE.Vector3(Math.cos(angle) * r, topY, Math.sin(angle) * r));
+            const a = (i / 5) * Math.PI * 2;
+            verts.push(new THREE.Vector3(Math.cos(a) * R, h, Math.sin(a) * R)); // 2-6
         }
         for (let i = 0; i < 5; i++) {
-            const angle = (i / 5) * Math.PI * 2 + Math.PI / 5;
-            vertices.push(new THREE.Vector3(Math.cos(angle) * r, botY, Math.sin(angle) * r));
-        }
-
-        // 10 kite faces, each = 2 triangles = 6 verts
-        const tris = [];
-        for (let i = 0; i < 5; i++) {
-            const t0 = 2 + i, t1 = 2 + ((i + 1) % 5), b0 = 7 + i;
-            tris.push([0, t0, b0]);
-            tris.push([0, b0, t1]);
-        }
-        for (let i = 0; i < 5; i++) {
-            const b0 = 7 + i, b1 = 7 + ((i + 1) % 5), t1 = 2 + ((i + 1) % 5);
-            tris.push([1, t1, b0]);
-            tris.push([1, b1, t1]);
+            const a = (i / 5) * Math.PI * 2 + Math.PI / 5;
+            verts.push(new THREE.Vector3(Math.cos(a) * R, -h, Math.sin(a) * R)); // 7-11
         }
 
+        // 10 kite faces, each = 2 triangles (6 verts)
+        // Top kite i: vertices (topPole, topRing[i], botRing[i], topRing[i+1])
+        //   Split: tri1=[pole, topRing[i], botRing[i]], tri2=[pole, botRing[i], topRing[i+1]]
+        // Bottom kite i: vertices (botPole, topRing[i+1], botRing[i], botRing[i+1])
+        //   Split: tri1=[pole, topRing[i+1], botRing[i]], tri2=[pole, botRing[i+1], topRing[i+1]]
         const positions = [];
-        for (const tri of tris) {
-            for (const vi of tri) {
-                const v = vertices[vi];
-                positions.push(v.x, v.y, v.z);
+
+        for (let i = 0; i < 5; i++) {
+            const t0 = 2 + i, t1 = 2 + (i + 1) % 5, b0 = 7 + i;
+            for (const vi of [0, t0, b0, 0, b0, t1]) {
+                const v = verts[vi]; positions.push(v.x, v.y, v.z);
+            }
+        }
+        for (let i = 0; i < 5; i++) {
+            const t1 = 2 + (i + 1) % 5, b0 = 7 + i, b1 = 7 + (i + 1) % 5;
+            for (const vi of [1, t1, b0, 1, b1, t1]) {
+                const v = verts[vi]; positions.push(v.x, v.y, v.z);
             }
         }
 
@@ -598,31 +601,57 @@
         geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
         geo.computeVertexNormals();
 
-        const faceCount = 10;
-        const vertsPerFace = 6;
+        const faceCount = 10, vpf = 6;
         geo.clearGroups();
-        for (let i = 0; i < faceCount; i++) {
-            geo.addGroup(i * vertsPerFace, vertsPerFace, i);
+        for (let i = 0; i < faceCount; i++) geo.addGroup(i * vpf, vpf, i);
+
+        // Manual kite UV mapping — bypass generic computePerFaceUVs which
+        // breaks on kite faces (duplicate vertices skew centroid calculation).
+        // Kite UV: pole at top (0.5, 0.12), opposite at bottom (0.5, 0.90),
+        // sides at left (0.10, 0.55) and right (0.90, 0.55).
+        // Number texture center (0.5, 0.5) maps to kite centroid.
+        const uvs = new Float32Array(faceCount * vpf * 2);
+        const uP = [0.50, 0.12]; // pole
+        const uL = [0.10, 0.55]; // side left
+        const uO = [0.50, 0.90]; // opposite
+        const uR = [0.90, 0.55]; // side right
+
+        // Top kites: verts = [pole, sideL, opposite, pole, opposite, sideR]
+        for (let f = 0; f < 5; f++) {
+            const b = f * vpf * 2;
+            uvs[b]=uP[0]; uvs[b+1]=uP[1]; uvs[b+2]=uL[0]; uvs[b+3]=uL[1]; uvs[b+4]=uO[0]; uvs[b+5]=uO[1];
+            uvs[b+6]=uP[0]; uvs[b+7]=uP[1]; uvs[b+8]=uO[0]; uvs[b+9]=uO[1]; uvs[b+10]=uR[0]; uvs[b+11]=uR[1];
         }
+        // Bottom kites: verts = [pole, opposite, sideL, pole, sideR, opposite]
+        for (let f = 0; f < 5; f++) {
+            const b = (5 + f) * vpf * 2;
+            uvs[b]=uP[0]; uvs[b+1]=uP[1]; uvs[b+2]=uO[0]; uvs[b+3]=uO[1]; uvs[b+4]=uL[0]; uvs[b+5]=uL[1];
+            uvs[b+6]=uP[0]; uvs[b+7]=uP[1]; uvs[b+8]=uR[0]; uvs[b+9]=uR[1]; uvs[b+10]=uO[0]; uvs[b+11]=uO[1];
+        }
+        geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
 
-        // Per-face UVs
-        computePerFaceUVs(geo, vertsPerFace);
-
-        // Face normals
-        const normals = [];
-        const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        // Face normals (ensure outward-pointing)
         const posAttr = geo.attributes.position;
+        const normals = [];
         for (let i = 0; i < faceCount; i++) {
-            const base = i * vertsPerFace;
+            const base = i * vpf;
             const a = new THREE.Vector3().fromBufferAttribute(posAttr, base);
-            const b = new THREE.Vector3().fromBufferAttribute(posAttr, base + 1);
+            const b2 = new THREE.Vector3().fromBufferAttribute(posAttr, base + 1);
             const c = new THREE.Vector3().fromBufferAttribute(posAttr, base + 2);
-            const ab = new THREE.Vector3().subVectors(b, a);
-            const ac = new THREE.Vector3().subVectors(c, a);
-            normals.push(new THREE.Vector3().crossVectors(ab, ac).normalize());
+            const n = new THREE.Vector3().crossVectors(
+                new THREE.Vector3().subVectors(b2, a),
+                new THREE.Vector3().subVectors(c, a)
+            ).normalize();
+            // Flip if pointing inward (away from face centroid direction)
+            const center = new THREE.Vector3();
+            for (let j = 0; j < vpf; j++) center.add(new THREE.Vector3().fromBufferAttribute(posAttr, base + j));
+            center.divideScalar(vpf);
+            if (n.dot(center) < 0) n.negate();
+            normals.push(n);
         }
 
-        const mats = numbers.map(n => makeFaceMaterial(n, 'kite'));
+        const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        const mats = numbers.map(n => makeFaceMaterial(n, 'kite', 0.65));
         const mesh = new THREE.Mesh(geo, mats);
         addEdges(mesh, geo);
         mesh.userData = { type: 'd10', numbers, normals };
